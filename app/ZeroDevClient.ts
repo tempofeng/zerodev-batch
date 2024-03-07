@@ -102,12 +102,28 @@ export class ZeroDevClient {
         return serializeModularPermissionAccount(kernelAccount, sessionPrivateKey)
     }
 
+    async createPasskeyKernelAccount(
+        publicClient: PublicClient,
+        passkeyName: string,
+        mode: WebAuthnMode) {
+        const rootModularPermissionPlugin = await this.createPasskeyRootModularPermissionPlugin(
+            publicClient,
+            passkeyName,
+            mode,
+        )
+        return createKernelAccount(publicClient, {
+            plugins: {
+                sudo: rootModularPermissionPlugin,
+            },
+        })
+    }
+
     async createPasskeySessionKeyKernelAccount(
         publicClient: PublicClient,
         passkeyName: string,
         mode: WebAuthnMode,
-        sessionPrivateKey: Hex,
         policies: Policy[],
+        sessionPrivateKey: Hex,
     ) {
         const rootModularPermissionPlugin = await this.createPasskeyRootModularPermissionPlugin(
             publicClient,
@@ -194,7 +210,7 @@ export class ZeroDevClient {
         return this.createKernelClient(chain, sessionKeyAccount as any)
     }
 
-    private createKernelClient(chain: Chain, kernelAccount: KernelSmartAccount) {
+    createKernelClient(chain: Chain, kernelAccount: KernelSmartAccount) {
         return createKernelAccountClient({
             account: kernelAccount,
             chain,
