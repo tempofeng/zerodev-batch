@@ -60,7 +60,7 @@ export default function Home() {
         let kernelClient: CreateKernelAccountClientReturnType
         if (isUsingSessionKey) {
             const policies = await createPolicies(USDT_ADDRESS, ORDER_GATEWAY_V2_ADDRESS)
-            const kernelAccount = await zeroDevClient.createPasskeySessionKeyKernelAccount(publicClient, "tempo", WebAuthnMode.Register, policies, sessionPrivateKey, isExecuteBatch)
+            const kernelAccount = await zeroDevClient.createPasskeySessionKeyKernelAccount(publicClient, "tempo", WebAuthnMode.Login, policies, sessionPrivateKey, isExecuteBatch)
             if (isSerialized) {
                 const serializedSessionKeyAccount = await zeroDevClient.serializeSessionKeyKernelClient(
                     kernelAccount,
