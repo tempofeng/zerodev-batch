@@ -3,7 +3,7 @@
 import { Web3Provider } from "./Web3Provider"
 import { optimismSepolia } from "viem/chains"
 import { Address, createPublicClient, encodeFunctionData, erc20Abi, Hex, http } from "viem"
-import { ZeroDevClient } from "@/app/ZeroDevClient"
+import { CreateKernelAccountClientReturnType, ZeroDevClient } from "@/app/ZeroDevClient"
 import { big2Bigint } from "@/app/bn"
 import Big from "big.js"
 import { useState } from "react"
@@ -42,6 +42,7 @@ export default function Home() {
         const ORDER_GATEWAY_V2_ADDRESS = "0xCb134B6101494b46506578324EbCbaefcAcFCE20" as Address
         const chain = optimismSepolia
         const sessionPrivateKey = "0xe9f1d966dba41273a50181fc3c43d739c2b8585653c12a878bb63e161c45e910"
+        const isSerialized = false
 
         const zeroDevClient = new ZeroDevClient(
             `https://passkeys.zerodev.app/api/v2/${zeroDevProjectId}`,
@@ -56,11 +57,18 @@ export default function Home() {
 
         const policies = await createPolicies(USDT_ADDRESS, ORDER_GATEWAY_V2_ADDRESS)
         const kernelAccount = await zeroDevClient.createPasskeySessionKeyKernelAccount(publicClient, "tempo", WebAuthnMode.Login, policies, sessionPrivateKey)
-        const serializedSessionKeyAccount = await zeroDevClient.serializeSessionKeyKernelClient(
-            kernelAccount,
-            sessionPrivateKey,
-        )
-        const kernelClient = await zeroDevClient.deserializeSessionKeyKernelClient(publicClient, serializedSessionKeyAccount, chain)
+        let kernelClient: CreateKernelAccountClientReturnType
+        if (isSerialized) {
+            const serializedSessionKeyAccount = await zeroDevClient.serializeSessionKeyKernelClient(
+                kernelAccount,
+                sessionPrivateKey,
+            )
+            kernelClient = await zeroDevClient.deserializeSessionKeyKernelClient(publicClient, serializedSessionKeyAccount, chain)
+            console.log("serialize and deserialize the kernel client")
+        } else {
+            kernelClient = zeroDevClient.createKernelClient(chain, kernelAccount)
+            console.log("use the account directly")
+        }
         setAddress(kernelClient.account?.address)
 
         const approveCallData = {
