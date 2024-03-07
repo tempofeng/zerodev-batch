@@ -88,7 +88,7 @@ export default function Home() {
     return (
         <Web3Provider>
             <div className="z-10 w-full items-center justify-between font-mono text-lg lg:flex pt-3 pb-3">
-                <h1 className="underline">EOA smart wallet without session key</h1>
+                <h1 className="underline">Clean example</h1>
             </div>
             <div className="w-full">
                 <p>wallet: {address}</p>
