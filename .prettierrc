@@ -1,0 +1,18 @@
+{
+    "semi": false,
+    "printWidth": 120,
+    "singleQuote": false,
+    "trailingComma": "all",
+    "arrowParens": "avoid",
+    "tabWidth": 4,
+    "bracketSpacing": true,
+    "organizeImportsSkipDestructiveCodeActions": true,
+    "overrides": [
+        {
+            "files": ["*.json", "*.yaml"],
+            "options": {
+                "tabWidth": 2
+            }
+        }
+    ]
+}
