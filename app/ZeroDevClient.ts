@@ -38,7 +38,7 @@ export type CallData = {
     data: Hex
 }
 
-export type CreateKernelAccountClientReturnType = ReturnType<typeof createKernelAccountClient>
+export type CreateKernelAccountClientReturnType = ReturnType<typeof createKernelAccountClient<Transport, Chain, KernelSmartAccount>>
 
 export type ZeroDevWalletClient<TChain extends Chain | undefined = Chain | undefined> = WalletClient<
     Transport,
@@ -55,7 +55,7 @@ export class ZeroDevClient {
     }
 
     async signTypedData(kernelClient: CreateKernelAccountClientReturnType, typedData: SignTypedDataParameters) {
-        return kernelClient.signTypedData(typedData)
+        return kernelClient.account.signTypedData(typedData)
     }
 
     async signMessage(kernelClient: CreateKernelAccountClientReturnType, parameters: SignMessageParameters) {
