@@ -10,6 +10,7 @@ import {
     createKernelAccount,
     createKernelAccountClient,
     createZeroDevPaymasterClient,
+    KernelAccountAbi,
     KernelSmartAccount,
 } from "@zerodev/sdk"
 import { bundlerActions, UserOperation, walletClientToSmartAccountSigner } from "permissionless"
@@ -18,13 +19,16 @@ import {
     Account,
     Address,
     Chain,
+    getAbiItem,
     Hex,
     http,
     PublicClient,
     SignMessageParameters,
     SignTypedDataParameters,
+    toFunctionSelector,
     Transport,
     WalletClient,
+    zeroAddress,
 } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 
@@ -47,8 +51,7 @@ export class ZeroDevClient {
         private readonly passkeyServerUrl: string,
         private readonly bundlerUrl: string,
         private readonly paymasterUrl: string,
-    ) {
-    }
+    ) {}
 
     async signTypedData(kernelClient: CreateKernelAccountClientReturnType, typedData: SignTypedDataParameters) {
         return kernelClient.signTypedData(typedData)
@@ -102,10 +105,7 @@ export class ZeroDevClient {
         return serializeModularPermissionAccount(kernelAccount, sessionPrivateKey)
     }
 
-    async createPasskeyKernelAccount(
-        publicClient: PublicClient,
-        passkeyName: string,
-        mode: WebAuthnMode) {
+    async createPasskeyKernelAccount(publicClient: PublicClient, passkeyName: string, mode: WebAuthnMode) {
         const rootModularPermissionPlugin = await this.createPasskeyRootModularPermissionPlugin(
             publicClient,
             passkeyName,
@@ -124,6 +124,7 @@ export class ZeroDevClient {
         mode: WebAuthnMode,
         policies: Policy[],
         sessionPrivateKey: Hex,
+        isExecuteBatch = false,
     ) {
         const rootModularPermissionPlugin = await this.createPasskeyRootModularPermissionPlugin(
             publicClient,
@@ -139,6 +140,12 @@ export class ZeroDevClient {
             plugins: {
                 sudo: rootModularPermissionPlugin,
                 regular: sessionKeyModularPermissionPlugin,
+                executorData: {
+                    executor: zeroAddress,
+                    selector: isExecuteBatch
+                        ? toFunctionSelector(getAbiItem({ abi: KernelAccountAbi, name: "executeBatch" }))
+                        : toFunctionSelector(getAbiItem({ abi: KernelAccountAbi, name: "execute" })),
+                },
             },
         })
     }

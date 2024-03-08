@@ -44,6 +44,7 @@ export default function Home() {
         const sessionPrivateKey = "0xe9f1d966dba41273a50181fc3c43d739c2b8585653c12a878bb63e161c45e910"
         const isSerialized = false
         const isUsingSessionKey = true
+        const isExecuteBatch = true
 
         const zeroDevClient = new ZeroDevClient(
             `https://passkeys.zerodev.app/api/v2/${zeroDevProjectId}`,
@@ -59,7 +60,7 @@ export default function Home() {
         let kernelClient: CreateKernelAccountClientReturnType
         if (isUsingSessionKey) {
             const policies = await createPolicies(USDT_ADDRESS, ORDER_GATEWAY_V2_ADDRESS)
-            const kernelAccount = await zeroDevClient.createPasskeySessionKeyKernelAccount(publicClient, "tempo", WebAuthnMode.Login, policies, sessionPrivateKey)
+            const kernelAccount = await zeroDevClient.createPasskeySessionKeyKernelAccount(publicClient, "tempo", WebAuthnMode.Login, policies, sessionPrivateKey, isExecuteBatch)
             if (isSerialized) {
                 const serializedSessionKeyAccount = await zeroDevClient.serializeSessionKeyKernelClient(
                     kernelAccount,
@@ -93,6 +94,7 @@ export default function Home() {
         const userOperation = await zeroDevClient.prepareUserOperationRequest(kernelClient, [approveCallData])
         // It works
         // const userOperation = await zeroDevClient.prepareUserOperationRequest(kernelClient, approveCallData)
+        console.log("userOperation", userOperation)
         const userOpHash = await zeroDevClient.sendSimulatedUserOperation(kernelClient, userOperation)
         console.log("userOpHash", userOpHash)
         setUserOpHash(userOpHash)
