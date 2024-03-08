@@ -2,7 +2,7 @@
 
 import { Web3Provider } from "./Web3Provider"
 import { optimismSepolia } from "viem/chains"
-import { Address, createPublicClient, encodeFunctionData, erc20Abi, Hex, http, PublicClient } from "viem"
+import { Address, createPublicClient, encodeFunctionData, erc20Abi, hashMessage, Hex, http, PublicClient } from "viem"
 import { ZeroDevClient } from "@/app/ZeroDevClient"
 import { big2Bigint } from "@/app/bn"
 import Big from "big.js"
@@ -10,6 +10,9 @@ import { useState } from "react"
 import { toMerklePolicy, toSignaturePolicy } from "@zerodev/modular-permission/policies"
 import { WebAuthnMode } from "@zerodev/modular-permission/signers"
 import { clearingHouseABI, vaultABI } from "@/app/types/wagmi/generated"
+import { verifyMessage } from "@ambire/signature-validator"
+import { ethers } from "ethers"
+import { verifyEIP6492Signature } from "@zerodev/sdk"
 
 const zeroDevProjectId = process.env.NEXT_PUBLIC_ZERODEV_PROJECT_ID!
 const USDT_ADDRESS = "0xA8Eba06366A8ad5E59Ef29477E7a4B384ea648Bf" as Address
@@ -22,25 +25,27 @@ const isSerialized = false
 const isUsingSessionKey = true
 const webAuthnMode = WebAuthnMode.Login
 const passkeyName = "passkey"
+const useAmbireSignatureValidator = false
 
 export default function Home() {
     const [address, setAddress] = useState<Address>()
     const [userOpHash, setUserOpHash] = useState<Hex>()
     const [signature, setSignature] = useState<Hex>()
+    const [isValidSig, setIsValidSig] = useState(false)
 
-    const createPolicies = async (collateralTokenAddress: Address, orderGatewayV2Address: Address, vaultAddress: Address, clearingHouseAddress: Address) => {
+    const createPolicies = async () => {
         return [
             await toMerklePolicy({
                 permissions: [
                     {
-                        target: collateralTokenAddress,
+                        target: CLEARING_HOUSE_ADDRESS,
                         valueLimit: BigInt(0),
                         abi: erc20Abi,
                         functionName: "approve",
                         args: [null, null],
                     },
                     {
-                        target: vaultAddress,
+                        target: VAULT_ADDRESS,
                         valueLimit: BigInt(0),
                         // @ts-ignore
                         abi: vaultABI,
@@ -49,7 +54,7 @@ export default function Home() {
                         args: [null, null],
                     },
                     {
-                        target: vaultAddress,
+                        target: VAULT_ADDRESS,
                         valueLimit: BigInt(0),
                         // @ts-ignore
                         abi: vaultABI,
@@ -58,7 +63,7 @@ export default function Home() {
                         args: [null],
                     },
                     {
-                        target: vaultAddress,
+                        target: VAULT_ADDRESS,
                         valueLimit: BigInt(0),
                         // @ts-ignore
                         abi: vaultABI,
@@ -67,7 +72,7 @@ export default function Home() {
                         args: [null, null],
                     },
                     {
-                        target: vaultAddress,
+                        target: VAULT_ADDRESS,
                         valueLimit: BigInt(0),
                         // @ts-ignore
                         abi: vaultABI,
@@ -76,7 +81,7 @@ export default function Home() {
                         args: [null, null],
                     },
                     {
-                        target: vaultAddress,
+                        target: VAULT_ADDRESS,
                         valueLimit: BigInt(0),
                         // @ts-ignore
                         abi: vaultABI,
@@ -85,7 +90,7 @@ export default function Home() {
                         args: [null, null],
                     },
                     {
-                        target: clearingHouseAddress,
+                        target: CLEARING_HOUSE_ADDRESS,
                         valueLimit: BigInt(0),
                         // @ts-ignore
                         abi: clearingHouseABI,
@@ -96,7 +101,7 @@ export default function Home() {
                 ],
             }),
             await toSignaturePolicy({
-                allowedRequestors: [orderGatewayV2Address],
+                allowedRequestors: [ORDER_GATEWAY_V2_ADDRESS],
             }),
         ]
     }
@@ -111,7 +116,7 @@ export default function Home() {
 
     async function createKernelClient(publicClient: PublicClient, zeroDevClient: ZeroDevClient) {
         if (isUsingSessionKey) {
-            const policies = await createPolicies(USDT_ADDRESS, ORDER_GATEWAY_V2_ADDRESS, VAULT_ADDRESS, CLEARING_HOUSE_ADDRESS)
+            const policies = await createPolicies()
             const kernelAccount = await zeroDevClient.createPasskeySessionKeyKernelAccount(publicClient, passkeyName, webAuthnMode, policies, sessionPrivateKey)
             if (isSerialized) {
                 const serializedSessionKeyAccount = await zeroDevClient.serializeSessionKeyKernelClient(
@@ -131,6 +136,41 @@ export default function Home() {
         }
     }
 
+    const signMessage = async () => {
+        const zeroDevClient = createZeroDevClient()
+        const publicClient = createPublicClient({
+            chain,
+            transport: http(),
+        })
+        const kernelClient = await createKernelClient(publicClient, zeroDevClient)
+        setAddress(kernelClient.account?.address)
+
+        const message = "Hello, world!"
+        const signature = await zeroDevClient.signMessage(kernelClient, message)
+        setSignature(signature)
+        console.log("signature", signature)
+
+        let isValidSig: boolean
+        if (useAmbireSignatureValidator) {
+            const provider = new ethers.providers.JsonRpcProvider("https://sepolia.optimism.io")
+            isValidSig = await verifyMessage({
+                signer: kernelClient.account.address,
+                message,
+                signature,
+                provider,
+            })
+        } else {
+            isValidSig = await verifyEIP6492Signature({
+                signer: kernelClient.account.address, // your smart account address
+                hash: hashMessage(message),
+                signature: signature,
+                client: publicClient,
+            })
+        }
+        console.log("isValidSig", isValidSig)
+        setIsValidSig(isValidSig)
+    }
+
     const signTypedData = async () => {
         const zeroDevClient = createZeroDevClient()
         const publicClient = createPublicClient({
@@ -141,12 +181,11 @@ export default function Home() {
         setAddress(kernelClient.account?.address)
 
         const typeData = {
-            account: "0x5D601F03e5EEC050b7ce6C03f89f34cD006C14eB",
             domain: {
                 name: "OrderGatewayV2",
                 version: "1",
                 chainId: 11155420,
-                verifyingContract: "0xCb134B6101494b46506578324EbCbaefcAcFCE20",
+                verifyingContract: ORDER_GATEWAY_V2_ADDRESS,
             },
             types: {
                 Order: [
@@ -169,16 +208,30 @@ export default function Home() {
                 price: 1000000000000000000000000000000000000000000n,
                 expiry: 1709882290n,
                 tradeType: 1,
-                owner: "0x5D601F03e5EEC050b7ce6C03f89f34cD006C14eB",
+                owner: kernelClient.account.address,
                 marginXCD: 5000000n,
                 relayFee: 1000000n,
                 id: "0x00000000000000000000000000000000336cd3e995be4803a7fe836fb3411deb",
             },
-        } as const
+        }
 
         const signature = await zeroDevClient.signTypedData(kernelClient, typeData)
         setSignature(signature)
         console.log("signature", signature)
+
+        const provider = new ethers.providers.JsonRpcProvider("https://sepolia.optimism.io")
+        const isValidSig = await verifyMessage({
+            signer: kernelClient.account.address,
+            typedData: {
+                domain: typeData.domain,
+                types: typeData.types,
+                message: typeData.message,
+            },
+            signature,
+            provider,
+        })
+        console.log("isValidSig", isValidSig)
+        setIsValidSig(isValidSig)
     }
 
     const sendUserOps = async () => {
@@ -218,6 +271,7 @@ export default function Home() {
                 <p>wallet: {address}</p>
                 <p>userOpHash: {userOpHash}</p>
                 <p>signature: {signature}</p>
+                <p>isValidSig: {isValidSig}</p>
             </div>
             <button
                 className="m-2 p-2 border-2 border-gray-300 rounded-sm"
@@ -228,6 +282,11 @@ export default function Home() {
                 className="m-2 p-2 border-2 border-gray-300 rounded-sm"
                 onClick={signTypedData}>
                 Sign Type Data
+            </button>
+            <button
+                className="m-2 p-2 border-2 border-gray-300 rounded-sm"
+                onClick={signMessage}>
+                Sign Message
             </button>
         </Web3Provider>
     )

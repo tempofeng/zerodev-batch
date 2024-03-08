@@ -23,8 +23,6 @@ import {
     Hex,
     http,
     PublicClient,
-    SignMessageParameters,
-    SignTypedDataParameters,
     toFunctionSelector,
     Transport,
     WalletClient,
@@ -54,12 +52,12 @@ export class ZeroDevClient {
     ) {
     }
 
-    async signTypedData(kernelClient: CreateKernelAccountClientReturnType, typedData: SignTypedDataParameters) {
+    async signTypedData(kernelClient: CreateKernelAccountClientReturnType, typedData: any) {
         return kernelClient.account.signTypedData(typedData)
     }
 
-    async signMessage(kernelClient: CreateKernelAccountClientReturnType, parameters: SignMessageParameters) {
-        return kernelClient.signMessage(parameters)
+    async signMessage(kernelClient: CreateKernelAccountClientReturnType, message: string) {
+        return kernelClient.account.signMessage({ message })
     }
 
     async sendUserOperation(kernelClient: CreateKernelAccountClientReturnType, callData: CallData[]) {
