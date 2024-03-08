@@ -31,7 +31,7 @@ export default function Home() {
     const [address, setAddress] = useState<Address>()
     const [userOpHash, setUserOpHash] = useState<Hex>()
     const [signature, setSignature] = useState<Hex>()
-    const [isValidSig, setIsValidSig] = useState(false)
+    const [isValidSig, setIsValidSig] = useState<boolean>()
 
     const createPolicies = async () => {
         return [
@@ -271,7 +271,7 @@ export default function Home() {
                 <p>wallet: {address}</p>
                 <p>userOpHash: {userOpHash}</p>
                 <p>signature: {signature}</p>
-                <p>isValidSig: {isValidSig}</p>
+                <p>isValidSig: {String(isValidSig)}</p>
             </div>
             <button
                 className="m-2 p-2 border-2 border-gray-300 rounded-sm"
