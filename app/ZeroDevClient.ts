@@ -51,7 +51,8 @@ export class ZeroDevClient {
         private readonly passkeyServerUrl: string,
         private readonly bundlerUrl: string,
         private readonly paymasterUrl: string,
-    ) {}
+    ) {
+    }
 
     async signTypedData(kernelClient: CreateKernelAccountClientReturnType, typedData: SignTypedDataParameters) {
         return kernelClient.signTypedData(typedData)
@@ -61,7 +62,7 @@ export class ZeroDevClient {
         return kernelClient.signMessage(parameters)
     }
 
-    async sendUserOperation(kernelClient: CreateKernelAccountClientReturnType, callData: CallData | CallData[]) {
+    async sendUserOperation(kernelClient: CreateKernelAccountClientReturnType, callData: CallData[]) {
         const kernelSmartAccount = kernelClient.account
         invariant(kernelSmartAccount, "kernelSmartAccount is undefined")
         const encodedCallData = await kernelSmartAccount.encodeCallData(callData)
@@ -86,7 +87,7 @@ export class ZeroDevClient {
 
     async prepareUserOperationRequest(
         kernelClient: CreateKernelAccountClientReturnType,
-        callData: CallData | CallData[],
+        callData: CallData[],
     ) {
         const kernelSmartAccount = kernelClient.account
         invariant(kernelSmartAccount, "kernelSmartAccount is undefined")
@@ -124,7 +125,6 @@ export class ZeroDevClient {
         mode: WebAuthnMode,
         policies: Policy[],
         sessionPrivateKey: Hex,
-        isExecuteBatch = false,
     ) {
         const rootModularPermissionPlugin = await this.createPasskeyRootModularPermissionPlugin(
             publicClient,
@@ -142,9 +142,7 @@ export class ZeroDevClient {
                 regular: sessionKeyModularPermissionPlugin,
                 executorData: {
                     executor: zeroAddress,
-                    selector: isExecuteBatch
-                        ? toFunctionSelector(getAbiItem({ abi: KernelAccountAbi, name: "executeBatch" }))
-                        : toFunctionSelector(getAbiItem({ abi: KernelAccountAbi, name: "execute" })),
+                    selector: toFunctionSelector(getAbiItem({ abi: KernelAccountAbi, name: "executeBatch" })),
                 },
             },
         })
