@@ -268,6 +268,20 @@ describe("ZeroDevClient test", () => {
         })
         console.log("isValidSimpleOrder", isValidSimpleOrder)
 
+        const isTypedValid2 = await getAction(
+            ctx.kernelClient.account.client,
+            readContract,
+        )({
+            abi: MockTypedRequestorAbi,
+            address: MOCK_TYPED_REQUESTOR_ADDRESS,
+            functionName: "verifyOrderSignature2",
+            args: [{
+                order: typedData.message,
+                signature,
+            }],
+        })
+        console.log("isTypedValid2", isTypedValid2)
+
         const isTypedValid = await ctx.publicClient.simulateContract({
             abi: orderGatewayV2Abi,
             address: ORDER_GATEWAY_V2_ADDRESS,
