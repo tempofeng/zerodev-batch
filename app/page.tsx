@@ -13,12 +13,16 @@ import { clearingHouseABI, vaultABI } from "@/app/types/wagmi/generated"
 import { verifyMessage } from "@ambire/signature-validator"
 import { ethers } from "ethers"
 import { verifyEIP6492Signature } from "@zerodev/sdk"
+import { getAction } from "permissionless"
+import { readContract } from "viem/actions"
+import { MockRequestorAbi } from "@/app/types/wagmi/MockRequestorAbi"
 
 const zeroDevProjectId = process.env.NEXT_PUBLIC_ZERODEV_PROJECT_ID!
 const USDT_ADDRESS = "0xA8Eba06366A8ad5E59Ef29477E7a4B384ea648Bf" as Address
 const VAULT_ADDRESS = "0xF1D51901302EaF6027BeA4a7D666a1BE337ca6bb" as Address
 const CLEARING_HOUSE_ADDRESS = "0x2000d0a1c77fC54EDA12C3ae564d760F7ac7ebf2" as Address
 const ORDER_GATEWAY_V2_ADDRESS = "0xCb134B6101494b46506578324EbCbaefcAcFCE20" as Address
+const MOCK_REQUESTOR_ADDRESS = "0x7da959782170Ed107ce769e43B4d87bb1F3F6aE5" as Address
 const chain = optimismSepolia
 const sessionPrivateKey = "0xe9f1d966dba41273a50181fc3c43d739c2b8585653c12a878bb63e161c45e910"
 const isSerialized = false
@@ -38,7 +42,7 @@ export default function Home() {
             await toMerklePolicy({
                 permissions: [
                     {
-                        target: CLEARING_HOUSE_ADDRESS,
+                        target: USDT_ADDRESS,
                         valueLimit: BigInt(0),
                         abi: erc20Abi,
                         functionName: "approve",
@@ -101,7 +105,7 @@ export default function Home() {
                 ],
             }),
             await toSignaturePolicy({
-                allowedRequestors: [ORDER_GATEWAY_V2_ADDRESS],
+                allowedRequestors: [MOCK_REQUESTOR_ADDRESS],
             }),
         ]
     }
@@ -169,6 +173,22 @@ export default function Home() {
         }
         console.log("isValidSig", isValidSig)
         setIsValidSig(isValidSig)
+
+        const response = await getAction(
+            kernelClient.account.client,
+            readContract,
+        )({
+            abi: MockRequestorAbi,
+            address: MOCK_REQUESTOR_ADDRESS,
+            functionName: "verifySignature",
+            args: [
+                kernelClient.account.address,
+                hashMessage(message),
+                signature,
+            ],
+        })
+        console.log("Signature verified response: ", response)
+        return response
     }
 
     const signTypedData = async () => {
