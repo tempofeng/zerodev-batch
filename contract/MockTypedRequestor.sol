@@ -37,6 +37,10 @@ interface IUniversalSigValidator {
 }
 
 
+interface KernelERC1271 {
+    function isValidSignature(bytes32 hash, bytes calldata signature) external view returns (bytes4);
+}
+
 contract MockTypedRequestor is EIP712Upgradeable {
     // keccak256 value: 0x112f24273953496214afa22f35960e8571a3ae064d87213f08f46499ee5faf09
     bytes32 public constant ORDER_TYPEHASH =
@@ -48,10 +52,19 @@ contract MockTypedRequestor is EIP712Upgradeable {
         return _hashTypedDataV4(keccak256(abi.encode(ORDER_TYPEHASH, order)));
     }
 
+    function verifySignature(address kernel, bytes32 hash, bytes calldata signature) external payable returns (bool) {
+        return KernelERC1271(kernel).isValidSignature(hash, signature) == 0x1626ba7e;
+    }
 
     function verifyOrderSignature(SignedOrder memory signedOrder) public returns (bool) {
         Order memory order = signedOrder.order;
         bytes32 orderHash = getOrderHash(order);
         return IUniversalSigValidator(0x59799642351a51b263922fc95837Ea55A2CDc7E2).isValidSig(order.owner, orderHash, signedOrder.signature);
+    }
+
+    function verifyOrderSignature2(SignedOrder memory signedOrder) public returns (bool) {
+        Order memory order = signedOrder.order;
+        bytes32 orderHash = getOrderHash(order);
+        return KernelERC1271(order.owner).isValidSignature(orderHash, signedOrder.signature) == 0x1626ba7e;
     }
 }
