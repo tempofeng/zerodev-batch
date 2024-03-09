@@ -39,7 +39,7 @@ export const MockTypedRequestorAbi = [{
 }, {
     "inputs": [{
         "components": [{
-            "internalType": "enum ActionType",
+            "internalType": "enum MockTypedRequestor.ActionType",
             "name": "action",
             "type": "uint8",
         }, { "internalType": "uint256", "name": "marketId", "type": "uint256" }, {
@@ -50,18 +50,19 @@ export const MockTypedRequestorAbi = [{
             "internalType": "uint256",
             "name": "expiry",
             "type": "uint256",
-        }, { "internalType": "enum TradeType", "name": "tradeType", "type": "uint8" }, {
-            "internalType": "address",
-            "name": "owner",
-            "type": "address",
-        }, { "internalType": "uint256", "name": "marginXCD", "type": "uint256" }, {
+        }, {
+            "internalType": "enum MockTypedRequestor.TradeType",
+            "name": "tradeType",
+            "type": "uint8",
+        }, { "internalType": "address", "name": "owner", "type": "address" }, {
             "internalType": "uint256",
-            "name": "relayFee",
+            "name": "marginXCD",
             "type": "uint256",
-        }, { "internalType": "bytes32", "name": "id", "type": "bytes32" }],
-        "internalType": "struct Order",
-        "name": "order",
-        "type": "tuple",
+        }, { "internalType": "uint256", "name": "relayFee", "type": "uint256" }, {
+            "internalType": "bytes32",
+            "name": "id",
+            "type": "bytes32",
+        }], "internalType": "struct MockTypedRequestor.Order", "name": "order", "type": "tuple",
     }],
     "name": "getOrderHash",
     "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
@@ -71,7 +72,7 @@ export const MockTypedRequestorAbi = [{
     "inputs": [{
         "components": [{
             "components": [{
-                "internalType": "enum ActionType",
+                "internalType": "enum MockTypedRequestor.ActionType",
                 "name": "action",
                 "type": "uint8",
             }, { "internalType": "uint256", "name": "marketId", "type": "uint256" }, {
@@ -82,20 +83,21 @@ export const MockTypedRequestorAbi = [{
                 "internalType": "uint256",
                 "name": "expiry",
                 "type": "uint256",
-            }, { "internalType": "enum TradeType", "name": "tradeType", "type": "uint8" }, {
-                "internalType": "address",
-                "name": "owner",
-                "type": "address",
-            }, { "internalType": "uint256", "name": "marginXCD", "type": "uint256" }, {
+            }, {
+                "internalType": "enum MockTypedRequestor.TradeType",
+                "name": "tradeType",
+                "type": "uint8",
+            }, { "internalType": "address", "name": "owner", "type": "address" }, {
                 "internalType": "uint256",
-                "name": "relayFee",
+                "name": "marginXCD",
                 "type": "uint256",
-            }, { "internalType": "bytes32", "name": "id", "type": "bytes32" }],
-            "internalType": "struct Order",
-            "name": "order",
-            "type": "tuple",
+            }, { "internalType": "uint256", "name": "relayFee", "type": "uint256" }, {
+                "internalType": "bytes32",
+                "name": "id",
+                "type": "bytes32",
+            }], "internalType": "struct MockTypedRequestor.Order", "name": "order", "type": "tuple",
         }, { "internalType": "bytes", "name": "signature", "type": "bytes" }],
-        "internalType": "struct SignedOrder",
+        "internalType": "struct MockTypedRequestor.SignedOrder",
         "name": "signedOrder",
         "type": "tuple",
     }],
@@ -107,7 +109,7 @@ export const MockTypedRequestorAbi = [{
     "inputs": [{
         "components": [{
             "components": [{
-                "internalType": "enum ActionType",
+                "internalType": "enum MockTypedRequestor.ActionType",
                 "name": "action",
                 "type": "uint8",
             }, { "internalType": "uint256", "name": "marketId", "type": "uint256" }, {
@@ -118,26 +120,27 @@ export const MockTypedRequestorAbi = [{
                 "internalType": "uint256",
                 "name": "expiry",
                 "type": "uint256",
-            }, { "internalType": "enum TradeType", "name": "tradeType", "type": "uint8" }, {
-                "internalType": "address",
-                "name": "owner",
-                "type": "address",
-            }, { "internalType": "uint256", "name": "marginXCD", "type": "uint256" }, {
+            }, {
+                "internalType": "enum MockTypedRequestor.TradeType",
+                "name": "tradeType",
+                "type": "uint8",
+            }, { "internalType": "address", "name": "owner", "type": "address" }, {
                 "internalType": "uint256",
-                "name": "relayFee",
+                "name": "marginXCD",
                 "type": "uint256",
-            }, { "internalType": "bytes32", "name": "id", "type": "bytes32" }],
-            "internalType": "struct Order",
-            "name": "order",
-            "type": "tuple",
+            }, { "internalType": "uint256", "name": "relayFee", "type": "uint256" }, {
+                "internalType": "bytes32",
+                "name": "id",
+                "type": "bytes32",
+            }], "internalType": "struct MockTypedRequestor.Order", "name": "order", "type": "tuple",
         }, { "internalType": "bytes", "name": "signature", "type": "bytes" }],
-        "internalType": "struct SignedOrder",
+        "internalType": "struct MockTypedRequestor.SignedOrder",
         "name": "signedOrder",
         "type": "tuple",
     }],
     "name": "verifyOrderSignature2",
     "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function",
 }, {
     "inputs": [{ "internalType": "address", "name": "kernel", "type": "address" }, {
