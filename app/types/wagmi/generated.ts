@@ -1,11 +1,203 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// BorrowingFee
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const borrowingFeeAbi = [
+    { type: "constructor", inputs: [], stateMutability: "nonpayable" },
+    { type: "error", inputs: [], name: "InvalidInitialization" },
+    { type: "error", inputs: [], name: "InvalidPosition" },
+    { type: "error", inputs: [{ name: "ratio", internalType: "uint256", type: "uint256" }], name: "InvalidRatio" },
+    { type: "error", inputs: [{ name: "taker", internalType: "address", type: "address" }], name: "InvalidTaker" },
+    { type: "error", inputs: [], name: "NotInitializing" },
+    {
+        type: "error",
+        inputs: [{ name: "value", internalType: "uint256", type: "uint256" }],
+        name: "SafeCastOverflowedUintToInt",
+    },
+    { type: "error", inputs: [], name: "Unauthorized" },
+    {
+        type: "event",
+        anonymous: false,
+        inputs: [
+            { name: "marketId", internalType: "uint256", type: "uint256", indexed: true },
+            { name: "trader", internalType: "address", type: "address", indexed: true },
+            { name: "borrowingFee", internalType: "int256", type: "int256", indexed: false },
+        ],
+        name: "BorrowingFeeSettled",
+    },
+    {
+        type: "event",
+        anonymous: false,
+        inputs: [{ name: "version", internalType: "uint64", type: "uint64", indexed: false }],
+        name: "Initialized",
+    },
+    {
+        type: "event",
+        anonymous: false,
+        inputs: [
+            { name: "marketId", internalType: "uint256", type: "uint256", indexed: true },
+            { name: "longMaxBorowingFeeRate", internalType: "uint256", type: "uint256", indexed: false },
+            { name: "shortMaxBorowingFeeRate", internalType: "uint256", type: "uint256", indexed: false },
+            { name: "oldLongMaxBorowingFeeRate", internalType: "uint256", type: "uint256", indexed: false },
+            { name: "oldShortMaxBorowingFeeRate", internalType: "uint256", type: "uint256", indexed: false },
+        ],
+        name: "MaxBorrowingFeeRateSet",
+    },
+    {
+        type: "event",
+        anonymous: false,
+        inputs: [
+            { name: "marketId", internalType: "uint256", type: "uint256", indexed: true },
+            { name: "longUtilRatio", internalType: "uint256", type: "uint256", indexed: false },
+            { name: "shortUtilRatio", internalType: "uint256", type: "uint256", indexed: false },
+            { name: "oldLongUtilRatio", internalType: "uint256", type: "uint256", indexed: false },
+            { name: "oldShortUtilRatio", internalType: "uint256", type: "uint256", indexed: false },
+        ],
+        name: "UtilRatioChanged",
+    },
+    {
+        type: "function",
+        inputs: [
+            { name: "marketId", internalType: "uint256", type: "uint256" },
+            { name: "maker", internalType: "address", type: "address" },
+        ],
+        name: "afterSettlePosition",
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        inputs: [
+            { name: "marketId", internalType: "uint256", type: "uint256" },
+            { name: "trader", internalType: "address", type: "address" },
+        ],
+        name: "afterUpdateMargin",
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        inputs: [
+            { name: "marketId", internalType: "uint256", type: "uint256" },
+            { name: "taker", internalType: "address", type: "address" },
+            { name: "maker", internalType: "address", type: "address" },
+            { name: "takerPositionSizeDelta", internalType: "int256", type: "int256" },
+            { name: "takerOpenNotionalDelta", internalType: "int256", type: "int256" },
+        ],
+        name: "beforeSettlePosition",
+        outputs: [
+            { name: "", internalType: "int256", type: "int256" },
+            { name: "", internalType: "int256", type: "int256" },
+        ],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        inputs: [
+            { name: "marketId", internalType: "uint256", type: "uint256" },
+            { name: "trader", internalType: "address", type: "address" },
+        ],
+        name: "beforeUpdateMargin",
+        outputs: [{ name: "", internalType: "int256", type: "int256" }],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        inputs: [],
+        name: "getAddressManager",
+        outputs: [{ name: "", internalType: "contract IAddressManager", type: "address" }],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        inputs: [{ name: "marketId", internalType: "uint256", type: "uint256" }],
+        name: "getMaxBorrowingFeeRate",
+        outputs: [
+            { name: "", internalType: "uint256", type: "uint256" },
+            { name: "", internalType: "uint256", type: "uint256" },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        inputs: [
+            { name: "marketId", internalType: "uint256", type: "uint256" },
+            { name: "trader", internalType: "address", type: "address" },
+        ],
+        name: "getPendingFee",
+        outputs: [{ name: "", internalType: "int256", type: "int256" }],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        inputs: [{ name: "marketId", internalType: "uint256", type: "uint256" }],
+        name: "getTotalPayerOpenNotional",
+        outputs: [
+            { name: "", internalType: "uint256", type: "uint256" },
+            { name: "", internalType: "uint256", type: "uint256" },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        inputs: [{ name: "marketId", internalType: "uint256", type: "uint256" }],
+        name: "getTotalReceiverOpenNotional",
+        outputs: [
+            { name: "", internalType: "uint256", type: "uint256" },
+            { name: "", internalType: "uint256", type: "uint256" },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        inputs: [{ name: "marketId", internalType: "uint256", type: "uint256" }],
+        name: "getUtilRatio",
+        outputs: [
+            { name: "", internalType: "uint256", type: "uint256" },
+            { name: "", internalType: "uint256", type: "uint256" },
+        ],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        inputs: [{ name: "addressManager", internalType: "address", type: "address" }],
+        name: "initialize",
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+    {
+        type: "function",
+        inputs: [
+            { name: "marketId", internalType: "uint256", type: "uint256" },
+            { name: "maxLongBorrowingFeeRate", internalType: "uint256", type: "uint256" },
+            { name: "maxShortBorrowingFeeRate", internalType: "uint256", type: "uint256" },
+        ],
+        name: "setMaxBorrowingFeeRate",
+        outputs: [],
+        stateMutability: "nonpayable",
+    },
+] as const
+
+export const borrowingFeeAddress = "0x2659e38840D59aD7fF5138cD822fc68716cFD1D1" as const
+
+export const borrowingFeeConfig = { address: borrowingFeeAddress, abi: borrowingFeeAbi } as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ClearingHouse
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const clearingHouseABI = [
-    { stateMutability: "nonpayable", type: "constructor", inputs: [] },
+export const clearingHouseAbi = [
+    { type: "constructor", inputs: [], stateMutability: "nonpayable" },
     { type: "error", inputs: [], name: "AuthorizationAlreadySet" },
-    { type: "error", inputs: [], name: "CannotLiquidateMaker" },
+    {
+        type: "error",
+        inputs: [
+            { name: "authorizer", internalType: "address", type: "address" },
+            { name: "authorized", internalType: "address", type: "address" },
+        ],
+        name: "AuthorizerNotAllow",
+    },
+    { type: "error", inputs: [], name: "CannotLiquidateWhitelistedMaker" },
     { type: "error", inputs: [], name: "DeadlineExceeded" },
     {
         type: "error",
@@ -33,6 +225,7 @@ export const clearingHouseABI = [
         ],
         name: "InsufficientOutputAmount",
     },
+    { type: "error", inputs: [], name: "InvalidInitialization" },
     { type: "error", inputs: [], name: "InvalidMakerData" },
     { type: "error", inputs: [{ name: "sender", internalType: "address", type: "address" }], name: "InvalidSender" },
     {
@@ -43,6 +236,7 @@ export const clearingHouseABI = [
         ],
         name: "NotEnoughFreeCollateral",
     },
+    { type: "error", inputs: [], name: "NotInitializing" },
     {
         type: "error",
         inputs: [
@@ -55,19 +249,33 @@ export const clearingHouseABI = [
     {
         type: "error",
         inputs: [
+            { name: "tradePrice", internalType: "uint256", type: "uint256" },
+            { name: "lowerPrice", internalType: "uint256", type: "uint256" },
+            { name: "upperPrice", internalType: "uint256", type: "uint256" },
+        ],
+        name: "PriceOutOfBound",
+    },
+    {
+        type: "error",
+        inputs: [
             { name: "base", internalType: "int256", type: "int256" },
             { name: "quote", internalType: "int256", type: "int256" },
         ],
         name: "QuoteResult",
     },
-    { type: "error", inputs: [], name: "Unauthorized" },
+    { type: "error", inputs: [], name: "ReentrancyGuardReentrantCall" },
+    {
+        type: "error",
+        inputs: [{ name: "value", internalType: "uint256", type: "uint256" }],
+        name: "SafeCastOverflowedUintToInt",
+    },
     { type: "error", inputs: [], name: "ZeroAmount" },
     {
         type: "event",
         anonymous: false,
         inputs: [
             { name: "authorizer", internalType: "address", type: "address", indexed: true },
-            { name: "authroized", internalType: "address", type: "address", indexed: true },
+            { name: "authorized", internalType: "address", type: "address", indexed: true },
             { name: "isAuthorized", internalType: "bool", type: "bool", indexed: false },
         ],
         name: "AuthorizationSet",
@@ -75,7 +283,7 @@ export const clearingHouseABI = [
     {
         type: "event",
         anonymous: false,
-        inputs: [{ name: "version", internalType: "uint8", type: "uint8", indexed: false }],
+        inputs: [{ name: "version", internalType: "uint64", type: "uint64", indexed: false }],
         name: "Initialized",
     },
     {
@@ -95,14 +303,6 @@ export const clearingHouseABI = [
         name: "Liquidated",
     },
     {
-        stateMutability: "view",
-        type: "function",
-        inputs: [],
-        name: "addressManager",
-        outputs: [{ name: "", internalType: "contract IAddressManager", type: "address" }],
-    },
-    {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             {
@@ -123,15 +323,14 @@ export const clearingHouseABI = [
             { name: "", internalType: "int256", type: "int256" },
             { name: "", internalType: "int256", type: "int256" },
         ],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
-            { name: "taker", internalType: "address", type: "address" },
             {
                 name: "params",
-                internalType: "struct IClearingHouse.ClosePositionParams",
+                internalType: "struct IClearingHouse.ClosePositionForParams",
                 type: "tuple",
                 components: [
                     { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -139,6 +338,9 @@ export const clearingHouseABI = [
                     { name: "oppositeAmountBound", internalType: "uint256", type: "uint256" },
                     { name: "deadline", internalType: "uint256", type: "uint256" },
                     { name: "makerData", internalType: "bytes", type: "bytes" },
+                    { name: "taker", internalType: "address", type: "address" },
+                    { name: "takerRelayFee", internalType: "uint256", type: "uint256" },
+                    { name: "makerRelayFee", internalType: "uint256", type: "uint256" },
                 ],
             },
         ],
@@ -147,9 +349,9 @@ export const clearingHouseABI = [
             { name: "", internalType: "int256", type: "int256" },
             { name: "", internalType: "int256", type: "int256" },
         ],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "pure",
         type: "function",
         inputs: [{ name: "encoded", internalType: "bytes", type: "bytes" }],
         name: "decodeMakerOrder",
@@ -161,9 +363,16 @@ export const clearingHouseABI = [
                 components: [{ name: "amount", internalType: "uint256", type: "uint256" }],
             },
         ],
+        stateMutability: "pure",
     },
     {
+        type: "function",
+        inputs: [],
+        name: "getAddressManager",
+        outputs: [{ name: "", internalType: "contract IAddressManager", type: "address" }],
         stateMutability: "view",
+    },
+    {
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -172,43 +381,16 @@ export const clearingHouseABI = [
         ],
         name: "getLiquidatablePositionSize",
         outputs: [{ name: "", internalType: "int256", type: "int256" }],
-    },
-    {
         stateMutability: "view",
-        type: "function",
-        inputs: [
-            { name: "marketId", internalType: "uint256", type: "uint256" },
-            { name: "trader", internalType: "address", type: "address" },
-            { name: "price", internalType: "uint256", type: "uint256" },
-        ],
-        name: "getMarginProfile",
-        outputs: [
-            {
-                name: "",
-                internalType: "struct IClearingHouse.MarginProfile",
-                type: "tuple",
-                components: [
-                    { name: "positionSize", internalType: "int256", type: "int256" },
-                    { name: "openNotional", internalType: "int256", type: "int256" },
-                    { name: "accountValue", internalType: "int256", type: "int256" },
-                    { name: "unrealizedPnl", internalType: "int256", type: "int256" },
-                    { name: "freeCollateral", internalType: "uint256", type: "uint256" },
-                    { name: "freeCollateralForOpen", internalType: "int256", type: "int256" },
-                    { name: "freeCollateralForReduce", internalType: "int256", type: "int256" },
-                    { name: "marginRatio", internalType: "int256", type: "int256" },
-                ],
-            },
-        ],
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
-        inputs: [{ name: "_addressManager", internalType: "address", type: "address" }],
+        inputs: [{ name: "addressManager", internalType: "address", type: "address" }],
         name: "initialize",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "authorizer", internalType: "address", type: "address" },
@@ -216,9 +398,9 @@ export const clearingHouseABI = [
         ],
         name: "isAuthorized",
         outputs: [{ name: "", internalType: "bool", type: "bool" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -227,9 +409,9 @@ export const clearingHouseABI = [
         ],
         name: "isLiquidatable",
         outputs: [{ name: "", internalType: "bool", type: "bool" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             {
@@ -238,7 +420,6 @@ export const clearingHouseABI = [
                 type: "tuple",
                 components: [
                     { name: "marketId", internalType: "uint256", type: "uint256" },
-                    { name: "liquidator", internalType: "address", type: "address" },
                     { name: "trader", internalType: "address", type: "address" },
                     { name: "positionSize", internalType: "uint256", type: "uint256" },
                 ],
@@ -249,9 +430,9 @@ export const clearingHouseABI = [
             { name: "", internalType: "int256", type: "int256" },
             { name: "", internalType: "int256", type: "int256" },
         ],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             {
@@ -275,9 +456,9 @@ export const clearingHouseABI = [
             { name: "", internalType: "int256", type: "int256" },
             { name: "", internalType: "int256", type: "int256" },
         ],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             {
@@ -285,21 +466,14 @@ export const clearingHouseABI = [
                 internalType: "struct IClearingHouse.OpenPositionForParams",
                 type: "tuple",
                 components: [
-                    {
-                        name: "info",
-                        internalType: "struct IClearingHouse.OpenPositionParams",
-                        type: "tuple",
-                        components: [
-                            { name: "marketId", internalType: "uint256", type: "uint256" },
-                            { name: "maker", internalType: "address", type: "address" },
-                            { name: "isBaseToQuote", internalType: "bool", type: "bool" },
-                            { name: "isExactInput", internalType: "bool", type: "bool" },
-                            { name: "amount", internalType: "uint256", type: "uint256" },
-                            { name: "oppositeAmountBound", internalType: "uint256", type: "uint256" },
-                            { name: "deadline", internalType: "uint256", type: "uint256" },
-                            { name: "makerData", internalType: "bytes", type: "bytes" },
-                        ],
-                    },
+                    { name: "marketId", internalType: "uint256", type: "uint256" },
+                    { name: "maker", internalType: "address", type: "address" },
+                    { name: "isBaseToQuote", internalType: "bool", type: "bool" },
+                    { name: "isExactInput", internalType: "bool", type: "bool" },
+                    { name: "amount", internalType: "uint256", type: "uint256" },
+                    { name: "oppositeAmountBound", internalType: "uint256", type: "uint256" },
+                    { name: "deadline", internalType: "uint256", type: "uint256" },
+                    { name: "makerData", internalType: "bytes", type: "bytes" },
                     { name: "taker", internalType: "address", type: "address" },
                     { name: "takerRelayFee", internalType: "uint256", type: "uint256" },
                     { name: "makerRelayFee", internalType: "uint256", type: "uint256" },
@@ -311,9 +485,9 @@ export const clearingHouseABI = [
             { name: "", internalType: "int256", type: "int256" },
             { name: "", internalType: "int256", type: "int256" },
         ],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             {
@@ -337,9 +511,9 @@ export const clearingHouseABI = [
             { name: "", internalType: "int256", type: "int256" },
             { name: "", internalType: "int256", type: "int256" },
         ],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             { name: "authorized", internalType: "address", type: "address" },
@@ -347,24 +521,26 @@ export const clearingHouseABI = [
         ],
         name: "setAuthorization",
         outputs: [],
+        stateMutability: "nonpayable",
     },
 ] as const
 
-export const clearingHouseAddress = "0x38b23dA875Bd4103f052BDDF35807eff642B72A8" as const
+export const clearingHouseAddress = "0x6B031a506802D3dC65D70c4b7741a631da493E72" as const
 
-export const clearingHouseConfig = { address: clearingHouseAddress, abi: clearingHouseABI } as const
+export const clearingHouseConfig = { address: clearingHouseAddress, abi: clearingHouseAbi } as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Config
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const configABI = [
-    { stateMutability: "nonpayable", type: "constructor", inputs: [] },
+export const configAbi = [
+    { type: "constructor", inputs: [], stateMutability: "nonpayable" },
     {
         type: "error",
         inputs: [{ name: "priceFeedId", internalType: "bytes32", type: "bytes32" }],
         name: "IllegalPriceFeed",
     },
+    { type: "error", inputs: [], name: "InvalidInitialization" },
     { type: "error", inputs: [{ name: "ratio", internalType: "uint256", type: "uint256" }], name: "InvalidRatio" },
     {
         type: "error",
@@ -384,7 +560,19 @@ export const configABI = [
         name: "MakerHasPosition",
     },
     { type: "error", inputs: [{ name: "marketId", internalType: "uint256", type: "uint256" }], name: "MarketExists" },
+    { type: "error", inputs: [], name: "NotInitializing" },
+    {
+        type: "error",
+        inputs: [{ name: "owner", internalType: "address", type: "address" }],
+        name: "OwnableInvalidOwner",
+    },
+    {
+        type: "error",
+        inputs: [{ name: "account", internalType: "address", type: "address" }],
+        name: "OwnableUnauthorizedAccount",
+    },
     { type: "error", inputs: [], name: "ZeroAddress" },
+    { type: "error", inputs: [], name: "ZeroRatio" },
     {
         type: "event",
         anonymous: false,
@@ -421,7 +609,7 @@ export const configABI = [
     {
         type: "event",
         anonymous: false,
-        inputs: [{ name: "version", internalType: "uint8", type: "uint8", indexed: false }],
+        inputs: [{ name: "version", internalType: "uint64", type: "uint64", indexed: false }],
         name: "Initialized",
     },
     {
@@ -476,15 +664,6 @@ export const configABI = [
         type: "event",
         anonymous: false,
         inputs: [
-            { name: "newRate", internalType: "uint256", type: "uint256", indexed: false },
-            { name: "oldRate", internalType: "uint256", type: "uint256", indexed: false },
-        ],
-        name: "MaxBorrowingFeeRateSet",
-    },
-    {
-        type: "event",
-        anonymous: false,
-        inputs: [
             { name: "newMaxOrderValidDuration", internalType: "uint256", type: "uint256", indexed: false },
             { name: "oldMaxOrderValidDuration", internalType: "uint256", type: "uint256", indexed: false },
         ],
@@ -494,10 +673,10 @@ export const configABI = [
         type: "event",
         anonymous: false,
         inputs: [
-            { name: "newMinExecutionFee", internalType: "uint256", type: "uint256", indexed: true },
-            { name: "oldMinExecutionFee", internalType: "uint256", type: "uint256", indexed: true },
+            { name: "newMaxRelayFee", internalType: "uint256", type: "uint256", indexed: true },
+            { name: "oldMaxRelayFee", internalType: "uint256", type: "uint256", indexed: true },
         ],
-        name: "MinExecutionFeeSet",
+        name: "MaxRelayFeeSet",
     },
     {
         type: "event",
@@ -530,21 +709,14 @@ export const configABI = [
         type: "event",
         anonymous: false,
         inputs: [
-            { name: "newRelayerFee", internalType: "uint256", type: "uint256", indexed: true },
-            { name: "oldRelayerFee", internalType: "uint256", type: "uint256", indexed: true },
+            { name: "marketId", internalType: "uint256", type: "uint256", indexed: false },
+            { name: "newPriceBandRatio", internalType: "uint256", type: "uint256", indexed: false },
+            { name: "oldPriceBandRatio", internalType: "uint256", type: "uint256", indexed: false },
         ],
-        name: "RelayerFeeSet",
+        name: "PriceBandRatioMapSet",
     },
-    { stateMutability: "nonpayable", type: "function", inputs: [], name: "acceptOwnership", outputs: [] },
+    { type: "function", inputs: [], name: "acceptOwnership", outputs: [], stateMutability: "nonpayable" },
     {
-        stateMutability: "view",
-        type: "function",
-        inputs: [],
-        name: "addressManager",
-        outputs: [{ name: "", internalType: "contract IAddressManager", type: "address" }],
-    },
-    {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -552,16 +724,23 @@ export const configABI = [
         ],
         name: "createMarket",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "nonpayable",
     },
     {
+        type: "function",
+        inputs: [],
+        name: "getAddressManager",
+        outputs: [{ name: "", internalType: "contract IAddressManager", type: "address" }],
         stateMutability: "view",
+    },
+    {
         type: "function",
         inputs: [],
         name: "getDepositCap",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [{ name: "marketId", internalType: "uint256", type: "uint256" }],
         name: "getFundingConfig",
@@ -577,86 +756,89 @@ export const configABI = [
                 ],
             },
         ],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [{ name: "marketId", internalType: "uint256", type: "uint256" }],
         name: "getInitialMarginRatio",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [{ name: "marketId", internalType: "uint256", type: "uint256" }],
         name: "getLiquidationFeeRatio",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [{ name: "marketId", internalType: "uint256", type: "uint256" }],
         name: "getLiquidationPenaltyRatio",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [{ name: "marketId", internalType: "uint256", type: "uint256" }],
         name: "getMaintenanceMarginRatio",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
-        inputs: [],
+        inputs: [{ name: "marketId", internalType: "uint256", type: "uint256" }],
         name: "getMaxBorrowingFeeRate",
-        outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        outputs: [
+            { name: "", internalType: "uint256", type: "uint256" },
+            { name: "", internalType: "uint256", type: "uint256" },
+        ],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [],
         name: "getMaxOrderValidDuration",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [],
         name: "getMaxRelayFee",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
-        type: "function",
-        inputs: [],
-        name: "getMinExecutionFee",
-        outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
-    },
-    {
-        stateMutability: "view",
         type: "function",
         inputs: [],
         name: "getOrderDelaySeconds",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "view",
     },
     {
+        type: "function",
+        inputs: [{ name: "marketId", internalType: "uint256", type: "uint256" }],
+        name: "getPriceBandRatio",
+        outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
         stateMutability: "view",
+    },
+    {
         type: "function",
         inputs: [{ name: "marketId", internalType: "uint256", type: "uint256" }],
         name: "getPriceFeedId",
         outputs: [{ name: "", internalType: "bytes32", type: "bytes32" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
-        inputs: [{ name: "_addressManager", internalType: "address", type: "address" }],
+        inputs: [{ name: "addressManager", internalType: "address", type: "address" }],
         name: "initialize",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -664,23 +846,23 @@ export const configABI = [
         ],
         name: "isWhitelistedMaker",
         outputs: [{ name: "", internalType: "bool", type: "bool" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [],
         name: "owner",
         outputs: [{ name: "", internalType: "address", type: "address" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [],
         name: "pendingOwner",
         outputs: [{ name: "", internalType: "address", type: "address" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -688,17 +870,17 @@ export const configABI = [
         ],
         name: "registerMaker",
         outputs: [],
-    },
-    { stateMutability: "nonpayable", type: "function", inputs: [], name: "renounceOwnership", outputs: [] },
-    {
         stateMutability: "nonpayable",
+    },
+    { type: "function", inputs: [], name: "renounceOwnership", outputs: [], stateMutability: "nonpayable" },
+    {
         type: "function",
         inputs: [{ name: "depositCap", internalType: "uint256", type: "uint256" }],
         name: "setDepositCap",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -708,9 +890,9 @@ export const configABI = [
         ],
         name: "setFundingConfig",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -718,9 +900,9 @@ export const configABI = [
         ],
         name: "setInitialMarginRatio",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -728,9 +910,9 @@ export const configABI = [
         ],
         name: "setLiquidationFeeRatio",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -738,9 +920,9 @@ export const configABI = [
         ],
         name: "setLiquidationPenaltyRatio",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -748,309 +930,75 @@ export const configABI = [
         ],
         name: "setMaintenanceMarginRatio",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
-        inputs: [{ name: "maxBorrowingFeeRate", internalType: "uint256", type: "uint256" }],
+        inputs: [
+            { name: "marketId", internalType: "uint256", type: "uint256" },
+            { name: "maxLongBorrowingFeeRate", internalType: "uint256", type: "uint256" },
+            { name: "maxShortBorrowingFeeRate", internalType: "uint256", type: "uint256" },
+        ],
         name: "setMaxBorrowingFeeRate",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [{ name: "maxOrderValidDuration", internalType: "uint256", type: "uint256" }],
         name: "setMaxOrderValidDuration",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
-        inputs: [{ name: "minExecutionFee", internalType: "uint256", type: "uint256" }],
-        name: "setMinExecutionFee",
+        inputs: [{ name: "maxRelayFee", internalType: "uint256", type: "uint256" }],
+        name: "setMaxRelayFee",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [{ name: "orderDelaySecondsArg", internalType: "uint256", type: "uint256" }],
         name: "setOrderDelaySeconds",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
-        inputs: [{ name: "relayerFee", internalType: "uint256", type: "uint256" }],
-        name: "setRelayerFee",
+        inputs: [
+            { name: "marketId", internalType: "uint256", type: "uint256" },
+            { name: "priceBandRatio", internalType: "uint256", type: "uint256" },
+        ],
+        name: "setPriceBandRatio",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [{ name: "newOwner", internalType: "address", type: "address" }],
         name: "transferOwnership",
         outputs: [],
+        stateMutability: "nonpayable",
     },
 ] as const
 
-export const configAddress = "0x94F242Ba5a54c06FeD5FEDF9fc7015963b7a2CB6" as const
+export const configAddress = "0x90435Ab9970a9232b387F8bFECc66f10a68383FF" as const
 
-export const configConfig = { address: configAddress, abi: configABI } as const
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ERC20
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export const erc20ABI = [
-    {
-        type: "event",
-        inputs: [
-            { name: "owner", type: "address", indexed: true },
-            { name: "spender", type: "address", indexed: true },
-            { name: "value", type: "uint256", indexed: false },
-        ],
-        name: "Approval",
-    },
-    {
-        type: "event",
-        inputs: [
-            { name: "from", type: "address", indexed: true },
-            { name: "to", type: "address", indexed: true },
-            { name: "value", type: "uint256", indexed: false },
-        ],
-        name: "Transfer",
-    },
-    {
-        stateMutability: "view",
-        type: "function",
-        inputs: [
-            { name: "owner", type: "address" },
-            { name: "spender", type: "address" },
-        ],
-        name: "allowance",
-        outputs: [{ type: "uint256" }],
-    },
-    {
-        stateMutability: "nonpayable",
-        type: "function",
-        inputs: [
-            { name: "spender", type: "address" },
-            { name: "amount", type: "uint256" },
-        ],
-        name: "approve",
-        outputs: [{ type: "bool" }],
-    },
-    {
-        stateMutability: "view",
-        type: "function",
-        inputs: [{ name: "account", type: "address" }],
-        name: "balanceOf",
-        outputs: [{ type: "uint256" }],
-    },
-    { stateMutability: "view", type: "function", inputs: [], name: "decimals", outputs: [{ type: "uint8" }] },
-    { stateMutability: "view", type: "function", inputs: [], name: "name", outputs: [{ type: "string" }] },
-    { stateMutability: "view", type: "function", inputs: [], name: "symbol", outputs: [{ type: "string" }] },
-    { stateMutability: "view", type: "function", inputs: [], name: "totalSupply", outputs: [{ type: "uint256" }] },
-    {
-        stateMutability: "nonpayable",
-        type: "function",
-        inputs: [
-            { name: "recipient", type: "address" },
-            { name: "amount", type: "uint256" },
-        ],
-        name: "transfer",
-        outputs: [{ type: "bool" }],
-    },
-    {
-        stateMutability: "nonpayable",
-        type: "function",
-        inputs: [
-            { name: "sender", type: "address" },
-            { name: "recipient", type: "address" },
-            { name: "amount", type: "uint256" },
-        ],
-        name: "transferFrom",
-        outputs: [{ type: "bool" }],
-    },
-    {
-        stateMutability: "nonpayable",
-        type: "function",
-        inputs: [
-            { name: "spender", type: "address" },
-            { name: "addedValue", type: "uint256" },
-        ],
-        name: "increaseAllowance",
-        outputs: [{ type: "bool" }],
-    },
-    {
-        stateMutability: "nonpayable",
-        type: "function",
-        inputs: [
-            { name: "spender", type: "address" },
-            { name: "subtractedValue", type: "uint256" },
-        ],
-        name: "decreaseAllowance",
-        outputs: [{ type: "bool" }],
-    },
-] as const
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ERC721
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export const erc721ABI = [
-    {
-        type: "event",
-        inputs: [
-            { name: "owner", type: "address", indexed: true },
-            { name: "spender", type: "address", indexed: true },
-            { name: "tokenId", type: "uint256", indexed: true },
-        ],
-        name: "Approval",
-    },
-    {
-        type: "event",
-        inputs: [
-            { name: "owner", type: "address", indexed: true },
-            { name: "operator", type: "address", indexed: true },
-            { name: "approved", type: "bool", indexed: false },
-        ],
-        name: "ApprovalForAll",
-    },
-    {
-        type: "event",
-        inputs: [
-            { name: "from", type: "address", indexed: true },
-            { name: "to", type: "address", indexed: true },
-            { name: "tokenId", type: "uint256", indexed: true },
-        ],
-        name: "Transfer",
-    },
-    {
-        stateMutability: "payable",
-        type: "function",
-        inputs: [
-            { name: "spender", type: "address" },
-            { name: "tokenId", type: "uint256" },
-        ],
-        name: "approve",
-        outputs: [],
-    },
-    {
-        stateMutability: "view",
-        type: "function",
-        inputs: [{ name: "account", type: "address" }],
-        name: "balanceOf",
-        outputs: [{ type: "uint256" }],
-    },
-    {
-        stateMutability: "view",
-        type: "function",
-        inputs: [{ name: "tokenId", type: "uint256" }],
-        name: "getApproved",
-        outputs: [{ type: "address" }],
-    },
-    {
-        stateMutability: "view",
-        type: "function",
-        inputs: [
-            { name: "owner", type: "address" },
-            { name: "operator", type: "address" },
-        ],
-        name: "isApprovedForAll",
-        outputs: [{ type: "bool" }],
-    },
-    { stateMutability: "view", type: "function", inputs: [], name: "name", outputs: [{ type: "string" }] },
-    {
-        stateMutability: "view",
-        type: "function",
-        inputs: [{ name: "tokenId", type: "uint256" }],
-        name: "ownerOf",
-        outputs: [{ name: "owner", type: "address" }],
-    },
-    {
-        stateMutability: "payable",
-        type: "function",
-        inputs: [
-            { name: "from", type: "address" },
-            { name: "to", type: "address" },
-            { name: "tokenId", type: "uint256" },
-        ],
-        name: "safeTransferFrom",
-        outputs: [],
-    },
-    {
-        stateMutability: "nonpayable",
-        type: "function",
-        inputs: [
-            { name: "from", type: "address" },
-            { name: "to", type: "address" },
-            { name: "id", type: "uint256" },
-            { name: "data", type: "bytes" },
-        ],
-        name: "safeTransferFrom",
-        outputs: [],
-    },
-    {
-        stateMutability: "nonpayable",
-        type: "function",
-        inputs: [
-            { name: "operator", type: "address" },
-            { name: "approved", type: "bool" },
-        ],
-        name: "setApprovalForAll",
-        outputs: [],
-    },
-    { stateMutability: "view", type: "function", inputs: [], name: "symbol", outputs: [{ type: "string" }] },
-    {
-        stateMutability: "view",
-        type: "function",
-        inputs: [{ name: "index", type: "uint256" }],
-        name: "tokenByIndex",
-        outputs: [{ type: "uint256" }],
-    },
-    {
-        stateMutability: "view",
-        type: "function",
-        inputs: [
-            { name: "owner", type: "address" },
-            { name: "index", type: "uint256" },
-        ],
-        name: "tokenByIndex",
-        outputs: [{ name: "tokenId", type: "uint256" }],
-    },
-    {
-        stateMutability: "view",
-        type: "function",
-        inputs: [{ name: "tokenId", type: "uint256" }],
-        name: "tokenURI",
-        outputs: [{ type: "string" }],
-    },
-    { stateMutability: "view", type: "function", inputs: [], name: "totalSupply", outputs: [{ type: "uint256" }] },
-    {
-        stateMutability: "payable",
-        type: "function",
-        inputs: [
-            { name: "sender", type: "address" },
-            { name: "recipient", type: "address" },
-            { name: "tokenId", type: "uint256" },
-        ],
-        name: "transferFrom",
-        outputs: [],
-    },
-] as const
+export const configConfig = { address: configAddress, abi: configAbi } as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // OrderGateway
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const orderGatewayABI = [
-    { stateMutability: "nonpayable", type: "constructor", inputs: [] },
+export const orderGatewayAbi = [
+    { type: "constructor", inputs: [], stateMutability: "nonpayable" },
     {
         type: "error",
         inputs: [{ name: "deadline", internalType: "uint256", type: "uint256" }],
         name: "InvalidDeadline",
     },
+    { type: "error", inputs: [], name: "InvalidInitialization" },
     {
         type: "error",
         inputs: [
@@ -1061,14 +1009,14 @@ export const orderGatewayABI = [
     },
     { type: "error", inputs: [], name: "InvalidOrderType" },
     { type: "error", inputs: [{ name: "sender", internalType: "address", type: "address" }], name: "InvalidSender" },
-    { type: "error", inputs: [], name: "LessThanMinExecutionFee" },
+    { type: "error", inputs: [], name: "NotInitializing" },
+    { type: "error", inputs: [], name: "OrderExecutedTooEarly" },
     { type: "error", inputs: [{ name: "orderId", internalType: "uint256", type: "uint256" }], name: "OrderNotExisted" },
-    { type: "error", inputs: [], name: "PriceTimestampTooEarly" },
-    { type: "error", inputs: [], name: "Unauthorized" },
+    { type: "error", inputs: [], name: "ReentrancyGuardReentrantCall" },
     {
         type: "event",
         anonymous: false,
-        inputs: [{ name: "version", internalType: "uint8", type: "uint8", indexed: false }],
+        inputs: [{ name: "version", internalType: "uint64", type: "uint64", indexed: false }],
         name: "Initialized",
     },
     {
@@ -1084,7 +1032,6 @@ export const orderGatewayABI = [
             { name: "orderId", internalType: "uint256", type: "uint256", indexed: true },
             { name: "sender", internalType: "address", type: "address", indexed: true },
             { name: "marketId", internalType: "uint256", type: "uint256", indexed: true },
-            { name: "executionFee", internalType: "uint256", type: "uint256", indexed: false },
             { name: "orderData", internalType: "bytes", type: "bytes", indexed: false },
         ],
         name: "OrderCreated",
@@ -1096,7 +1043,6 @@ export const orderGatewayABI = [
             { name: "orderId", internalType: "uint256", type: "uint256", indexed: true },
             { name: "sender", internalType: "address", type: "address", indexed: true },
             { name: "marketId", internalType: "uint256", type: "uint256", indexed: true },
-            { name: "executionFee", internalType: "uint256", type: "uint256", indexed: false },
             { name: "keeper", internalType: "address", type: "address", indexed: false },
             { name: "orderData", internalType: "bytes", type: "bytes", indexed: false },
         ],
@@ -1109,7 +1055,6 @@ export const orderGatewayABI = [
             { name: "orderId", internalType: "uint256", type: "uint256", indexed: true },
             { name: "sender", internalType: "address", type: "address", indexed: true },
             { name: "marketId", internalType: "uint256", type: "uint256", indexed: true },
-            { name: "executionFee", internalType: "uint256", type: "uint256", indexed: false },
             { name: "keeper", internalType: "address", type: "address", indexed: false },
             { name: "orderData", internalType: "bytes", type: "bytes", indexed: false },
             { name: "reason", internalType: "bytes", type: "bytes", indexed: false },
@@ -1117,21 +1062,13 @@ export const orderGatewayABI = [
         name: "OrderPurged",
     },
     {
-        stateMutability: "view",
-        type: "function",
-        inputs: [],
-        name: "addressManager",
-        outputs: [{ name: "", internalType: "contract IAddressManager", type: "address" }],
-    },
-    {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [{ name: "orderId", internalType: "uint256", type: "uint256" }],
         name: "cancelOrder",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "payable",
         type: "function",
         inputs: [
             { name: "orderType", internalType: "enum OrderGateway.DelayedOrderType", type: "uint8" },
@@ -1139,9 +1076,9 @@ export const orderGatewayABI = [
         ],
         name: "createOrder",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             { name: "orderId", internalType: "uint256", type: "uint256" },
@@ -1152,9 +1089,9 @@ export const orderGatewayABI = [
             { name: "base", internalType: "int256", type: "int256" },
             { name: "quote", internalType: "int256", type: "int256" },
         ],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             {
@@ -1165,7 +1102,6 @@ export const orderGatewayABI = [
                     { name: "orderType", internalType: "enum OrderGateway.DelayedOrderType", type: "uint8" },
                     { name: "sender", internalType: "address", type: "address" },
                     { name: "marketId", internalType: "uint256", type: "uint256" },
-                    { name: "executionFee", internalType: "uint256", type: "uint256" },
                     { name: "createdAt", internalType: "uint256", type: "uint256" },
                     { name: "executableAt", internalType: "uint256", type: "uint256" },
                     { name: "data", internalType: "bytes", type: "bytes" },
@@ -1178,16 +1114,23 @@ export const orderGatewayABI = [
             { name: "base", internalType: "int256", type: "int256" },
             { name: "quote", internalType: "int256", type: "int256" },
         ],
+        stateMutability: "nonpayable",
     },
     {
+        type: "function",
+        inputs: [],
+        name: "getAddressManager",
+        outputs: [{ name: "", internalType: "contract IAddressManager", type: "address" }],
         stateMutability: "view",
+    },
+    {
         type: "function",
         inputs: [],
         name: "getCurrentNonce",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [{ name: "orderId", internalType: "uint256", type: "uint256" }],
         name: "getOrder",
@@ -1200,16 +1143,15 @@ export const orderGatewayABI = [
                     { name: "orderType", internalType: "enum OrderGateway.DelayedOrderType", type: "uint8" },
                     { name: "sender", internalType: "address", type: "address" },
                     { name: "marketId", internalType: "uint256", type: "uint256" },
-                    { name: "executionFee", internalType: "uint256", type: "uint256" },
                     { name: "createdAt", internalType: "uint256", type: "uint256" },
                     { name: "executableAt", internalType: "uint256", type: "uint256" },
                     { name: "data", internalType: "bytes", type: "bytes" },
                 ],
             },
         ],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "start", internalType: "uint256", type: "uint256" },
@@ -1217,16 +1159,16 @@ export const orderGatewayABI = [
         ],
         name: "getOrderIds",
         outputs: [{ name: "", internalType: "uint256[]", type: "uint256[]" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [],
         name: "getOrdersCount",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "taker", internalType: "address", type: "address" },
@@ -1235,59 +1177,86 @@ export const orderGatewayABI = [
         ],
         name: "getUserOrderIds",
         outputs: [{ name: "", internalType: "uint256[]", type: "uint256[]" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [{ name: "taker", internalType: "address", type: "address" }],
         name: "getUserOrdersCount",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
-        inputs: [{ name: "_addressManager", internalType: "address", type: "address" }],
+        inputs: [{ name: "addressManager", internalType: "address", type: "address" }],
         name: "initialize",
         outputs: [],
+        stateMutability: "nonpayable",
     },
-    { stateMutability: "nonpayable", type: "function", inputs: [], name: "withdrawAllEth", outputs: [] },
 ] as const
 
-export const orderGatewayAddress = "0x7DA290C59dAdF3cbD3d5cA9307FaF00B0AbD5760" as const
+export const orderGatewayAddress = "0x74f703c401DBCeffE102Bb3E9a79bf76DEe1b244" as const
 
-export const orderGatewayConfig = { address: orderGatewayAddress, abi: orderGatewayABI } as const
+export const orderGatewayConfig = { address: orderGatewayAddress, abi: orderGatewayAbi } as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // OrderGatewayV2
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const orderGatewayV2ABI = [
-    { stateMutability: "nonpayable", type: "constructor", inputs: [] },
+export const orderGatewayV2Abi = [
+    { type: "constructor", inputs: [], stateMutability: "nonpayable" },
+    { type: "error", inputs: [{ name: "target", internalType: "address", type: "address" }], name: "AddressEmptyCode" },
+    {
+        type: "error",
+        inputs: [{ name: "account", internalType: "address", type: "address" }],
+        name: "AddressInsufficientBalance",
+    },
     {
         type: "error",
         inputs: [
+            { name: "owner", internalType: "address", type: "address" },
             { name: "orderId", internalType: "bytes32", type: "bytes32" },
             { name: "totalFilledAmount", internalType: "uint256", type: "uint256" },
         ],
         name: "ExceedOrderAmount",
     },
+    { type: "error", inputs: [], name: "FailedInnerCall" },
     {
         type: "error",
         inputs: [
+            { name: "owner", internalType: "address", type: "address" },
             { name: "orderId", internalType: "bytes32", type: "bytes32" },
             { name: "orderFilledAmount", internalType: "uint256", type: "uint256" },
             { name: "clearingHouseFilledAmount", internalType: "uint256", type: "uint256" },
         ],
         name: "FilledAmountMismatched",
     },
-    { type: "error", inputs: [{ name: "orderId", internalType: "bytes32", type: "bytes32" }], name: "OrderAmountZero" },
-    { type: "error", inputs: [{ name: "orderId", internalType: "bytes32", type: "bytes32" }], name: "OrderHasExpired" },
+    { type: "error", inputs: [], name: "InvalidInitialization" },
+    { type: "error", inputs: [], name: "NotInitializing" },
     {
         type: "error",
         inputs: [
+            { name: "owner", internalType: "address", type: "address" },
+            { name: "orderId", internalType: "bytes32", type: "bytes32" },
+        ],
+        name: "OrderAmountZero",
+    },
+    {
+        type: "error",
+        inputs: [
+            { name: "owner", internalType: "address", type: "address" },
+            { name: "orderId", internalType: "bytes32", type: "bytes32" },
+        ],
+        name: "OrderHasExpired",
+    },
+    {
+        type: "error",
+        inputs: [
+            { name: "takerOrderOwner", internalType: "address", type: "address" },
             { name: "takerOrderId", internalType: "bytes32", type: "bytes32" },
-            { name: "makerOrderId", internalType: "bytes32", type: "bytes32" },
             { name: "takerMarketId", internalType: "uint256", type: "uint256" },
+            { name: "makerOrderOwner", internalType: "address", type: "address" },
+            { name: "makerOrderId", internalType: "bytes32", type: "bytes32" },
             { name: "makerMarketId", internalType: "uint256", type: "uint256" },
         ],
         name: "OrderMarketMismatched",
@@ -1295,7 +1264,9 @@ export const orderGatewayV2ABI = [
     {
         type: "error",
         inputs: [
+            { name: "takerOrderOwner", internalType: "address", type: "address" },
             { name: "takerOrderId", internalType: "bytes32", type: "bytes32" },
+            { name: "makerOrderOwner", internalType: "address", type: "address" },
             { name: "makerOrderId", internalType: "bytes32", type: "bytes32" },
         ],
         name: "OrderSideMismatched",
@@ -1303,7 +1274,7 @@ export const orderGatewayV2ABI = [
     {
         type: "error",
         inputs: [
-            { name: "orderOwner", internalType: "address", type: "address" },
+            { name: "owner", internalType: "address", type: "address" },
             { name: "orderId", internalType: "bytes32", type: "bytes32" },
             { name: "reason", internalType: "bytes", type: "bytes" },
         ],
@@ -1311,23 +1282,51 @@ export const orderGatewayV2ABI = [
     },
     {
         type: "error",
-        inputs: [{ name: "orderId", internalType: "bytes32", type: "bytes32" }],
+        inputs: [
+            { name: "owner", internalType: "address", type: "address" },
+            { name: "orderId", internalType: "bytes32", type: "bytes32" },
+        ],
         name: "OrderWasCanceled",
     },
     {
         type: "error",
         inputs: [
+            { name: "owner", internalType: "address", type: "address" },
             { name: "orderId", internalType: "bytes32", type: "bytes32" },
             { name: "orderAmount", internalType: "int256", type: "int256" },
             { name: "takerPositionSize", internalType: "int256", type: "int256" },
         ],
         name: "ReduceOnlySideMismatch",
     },
+    { type: "error", inputs: [], name: "ReentrancyGuardReentrantCall" },
+    {
+        type: "error",
+        inputs: [{ name: "value", internalType: "int256", type: "int256" }],
+        name: "SafeCastOverflowedIntToUint",
+    },
+    {
+        type: "error",
+        inputs: [{ name: "value", internalType: "uint256", type: "uint256" }],
+        name: "SafeCastOverflowedUintToInt",
+    },
+    {
+        type: "error",
+        inputs: [{ name: "token", internalType: "address", type: "address" }],
+        name: "SafeERC20FailedOperation",
+    },
     { type: "error", inputs: [], name: "SettleOrderParamsLengthError" },
-    { type: "error", inputs: [{ name: "orderId", internalType: "bytes32", type: "bytes32" }], name: "UnableToFillFok" },
     {
         type: "error",
         inputs: [
+            { name: "owner", internalType: "address", type: "address" },
+            { name: "orderId", internalType: "bytes32", type: "bytes32" },
+        ],
+        name: "UnableToFillFok",
+    },
+    {
+        type: "error",
+        inputs: [
+            { name: "owner", internalType: "address", type: "address" },
             { name: "orderId", internalType: "bytes32", type: "bytes32" },
             { name: "orderAmountAbs", internalType: "uint256", type: "uint256" },
             { name: "takerPositionSizeAbs", internalType: "uint256", type: "uint256" },
@@ -1339,14 +1338,15 @@ export const orderGatewayV2ABI = [
     {
         type: "event",
         anonymous: false,
-        inputs: [{ name: "version", internalType: "uint8", type: "uint8", indexed: false }],
+        inputs: [{ name: "version", internalType: "uint64", type: "uint64", indexed: false }],
         name: "Initialized",
     },
     {
         type: "event",
         anonymous: false,
         inputs: [
-            { name: "orderId", internalType: "bytes32", type: "bytes32", indexed: true },
+            { name: "owner", internalType: "address", type: "address", indexed: true },
+            { name: "id", internalType: "bytes32", type: "bytes32", indexed: true },
             { name: "reason", internalType: "string", type: "string", indexed: false },
         ],
         name: "OrderCanceled",
@@ -1365,28 +1365,20 @@ export const orderGatewayV2ABI = [
             { name: "price", internalType: "uint256", type: "uint256", indexed: false },
             { name: "fillPrice", internalType: "uint256", type: "uint256", indexed: false },
             { name: "expiry", internalType: "uint256", type: "uint256", indexed: false },
-            { name: "margin", internalType: "uint256", type: "uint256", indexed: false },
-            { name: "matcherFee", internalType: "uint256", type: "uint256", indexed: false },
+            { name: "marginXCD", internalType: "uint256", type: "uint256", indexed: false },
+            { name: "relayFee", internalType: "uint256", type: "uint256", indexed: false },
             { name: "maker", internalType: "address", type: "address", indexed: false },
         ],
         name: "OrderFilled",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [],
         name: "ORDER_TYPEHASH",
         outputs: [{ name: "", internalType: "bytes32", type: "bytes32" }],
-    },
-    {
         stateMutability: "view",
-        type: "function",
-        inputs: [],
-        name: "addressManager",
-        outputs: [{ name: "", internalType: "contract IAddressManager", type: "address" }],
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             {
@@ -1406,8 +1398,8 @@ export const orderGatewayV2ABI = [
                             { name: "expiry", internalType: "uint256", type: "uint256" },
                             { name: "tradeType", internalType: "enum OrderGatewayV2.TradeType", type: "uint8" },
                             { name: "owner", internalType: "address", type: "address" },
-                            { name: "margin", internalType: "uint256", type: "uint256" },
-                            { name: "matcherFee", internalType: "uint256", type: "uint256" },
+                            { name: "marginXCD", internalType: "uint256", type: "uint256" },
+                            { name: "relayFee", internalType: "uint256", type: "uint256" },
                             { name: "id", internalType: "bytes32", type: "bytes32" },
                         ],
                     },
@@ -1417,9 +1409,9 @@ export const orderGatewayV2ABI = [
         ],
         name: "cancelOrder",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [],
         name: "eip712Domain",
@@ -1432,16 +1424,26 @@ export const orderGatewayV2ABI = [
             { name: "salt", internalType: "bytes32", type: "bytes32" },
             { name: "extensions", internalType: "uint256[]", type: "uint256[]" },
         ],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
-        inputs: [{ name: "orderId", internalType: "bytes32", type: "bytes32" }],
+        inputs: [],
+        name: "getAddressManager",
+        outputs: [{ name: "", internalType: "contract IAddressManager", type: "address" }],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        inputs: [
+            { name: "orderOwner", internalType: "address", type: "address" },
+            { name: "orderId", internalType: "bytes32", type: "bytes32" },
+        ],
         name: "getOrderFilledAmount",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             {
@@ -1456,52 +1458,55 @@ export const orderGatewayV2ABI = [
                     { name: "expiry", internalType: "uint256", type: "uint256" },
                     { name: "tradeType", internalType: "enum OrderGatewayV2.TradeType", type: "uint8" },
                     { name: "owner", internalType: "address", type: "address" },
-                    { name: "margin", internalType: "uint256", type: "uint256" },
-                    { name: "matcherFee", internalType: "uint256", type: "uint256" },
+                    { name: "marginXCD", internalType: "uint256", type: "uint256" },
+                    { name: "relayFee", internalType: "uint256", type: "uint256" },
                     { name: "id", internalType: "bytes32", type: "bytes32" },
                 ],
             },
         ],
         name: "getOrderHash",
         outputs: [{ name: "", internalType: "bytes32", type: "bytes32" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
-            { name: "name", internalType: "string", type: "string" },
-            { name: "version", internalType: "string", type: "string" },
-            { name: "_addressManager", internalType: "address", type: "address" },
+            { name: "name_", internalType: "string", type: "string" },
+            { name: "version_", internalType: "string", type: "string" },
+            { name: "addressManager_", internalType: "address", type: "address" },
         ],
         name: "initialize",
         outputs: [],
-    },
-    {
-        stateMutability: "view",
-        type: "function",
-        inputs: [{ name: "matcher", internalType: "address", type: "address" }],
-        name: "isMatcher",
-        outputs: [{ name: "", internalType: "bool", type: "bool" }],
-    },
-    {
-        stateMutability: "view",
-        type: "function",
-        inputs: [{ name: "orderId", internalType: "bytes32", type: "bytes32" }],
-        name: "isOrderCanceled",
-        outputs: [{ name: "", internalType: "bool", type: "bool" }],
-    },
-    {
         stateMutability: "nonpayable",
+    },
+    {
         type: "function",
         inputs: [
-            { name: "matcher", internalType: "address", type: "address" },
-            { name: "isMatcherArg", internalType: "bool", type: "bool" },
+            { name: "orderOwner", internalType: "address", type: "address" },
+            { name: "orderId", internalType: "bytes32", type: "bytes32" },
         ],
-        name: "setMatcher",
-        outputs: [],
+        name: "isOrderCanceled",
+        outputs: [{ name: "", internalType: "bool", type: "bool" }],
+        stateMutability: "view",
     },
     {
+        type: "function",
+        inputs: [{ name: "address_", internalType: "address", type: "address" }],
+        name: "isRelayer",
+        outputs: [{ name: "", internalType: "bool", type: "bool" }],
+        stateMutability: "view",
+    },
+    {
+        type: "function",
+        inputs: [
+            { name: "address_", internalType: "address", type: "address" },
+            { name: "isRelayer_", internalType: "bool", type: "bool" },
+        ],
+        name: "setRelayer",
+        outputs: [],
         stateMutability: "nonpayable",
+    },
+    {
         type: "function",
         inputs: [
             {
@@ -1526,8 +1531,8 @@ export const orderGatewayV2ABI = [
                                     { name: "expiry", internalType: "uint256", type: "uint256" },
                                     { name: "tradeType", internalType: "enum OrderGatewayV2.TradeType", type: "uint8" },
                                     { name: "owner", internalType: "address", type: "address" },
-                                    { name: "margin", internalType: "uint256", type: "uint256" },
-                                    { name: "matcherFee", internalType: "uint256", type: "uint256" },
+                                    { name: "marginXCD", internalType: "uint256", type: "uint256" },
+                                    { name: "relayFee", internalType: "uint256", type: "uint256" },
                                     { name: "id", internalType: "bytes32", type: "bytes32" },
                                 ],
                             },
@@ -1542,9 +1547,9 @@ export const orderGatewayV2ABI = [
         ],
         name: "settleOrder",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             {
@@ -1564,8 +1569,8 @@ export const orderGatewayV2ABI = [
                             { name: "expiry", internalType: "uint256", type: "uint256" },
                             { name: "tradeType", internalType: "enum OrderGatewayV2.TradeType", type: "uint8" },
                             { name: "owner", internalType: "address", type: "address" },
-                            { name: "margin", internalType: "uint256", type: "uint256" },
-                            { name: "matcherFee", internalType: "uint256", type: "uint256" },
+                            { name: "marginXCD", internalType: "uint256", type: "uint256" },
+                            { name: "relayFee", internalType: "uint256", type: "uint256" },
                             { name: "id", internalType: "bytes32", type: "bytes32" },
                         ],
                     },
@@ -1587,26 +1592,31 @@ export const orderGatewayV2ABI = [
                     { name: "expiry", internalType: "uint256", type: "uint256" },
                     { name: "tradeType", internalType: "enum OrderGatewayV2.TradeType", type: "uint8" },
                     { name: "owner", internalType: "address", type: "address" },
-                    { name: "margin", internalType: "uint256", type: "uint256" },
-                    { name: "matcherFee", internalType: "uint256", type: "uint256" },
+                    { name: "marginXCD", internalType: "uint256", type: "uint256" },
+                    { name: "relayFee", internalType: "uint256", type: "uint256" },
                     { name: "id", internalType: "bytes32", type: "bytes32" },
                 ],
             },
         ],
+        stateMutability: "nonpayable",
     },
-    { stateMutability: "nonpayable", type: "function", inputs: [], name: "withdrawMatcherFee", outputs: [] },
+    { type: "function", inputs: [], name: "withdrawMatcherFee", outputs: [], stateMutability: "nonpayable" },
 ] as const
 
-export const orderGatewayV2Address = "0x578599Cb55150E78bb195bD7Ed0C0E40C17F01B5" as const
+export const orderGatewayV2Address = "0xe920d146e666b5cC31B9D7e6840d8e955D0B447B" as const
 
-export const orderGatewayV2Config = { address: orderGatewayV2Address, abi: orderGatewayV2ABI } as const
+export const orderGatewayV2Config = { address: orderGatewayV2Address, abi: orderGatewayV2Abi } as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // PythOracleAdapter
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const pythOracleAdapterABI = [
-    { stateMutability: "nonpayable", type: "constructor", inputs: [] },
+export const pythOracleAdapterAbi = [
+    {
+        type: "constructor",
+        inputs: [{ name: "pyth_", internalType: "address", type: "address" }],
+        stateMutability: "nonpayable",
+    },
     {
         type: "error",
         inputs: [
@@ -1644,14 +1654,27 @@ export const pythOracleAdapterABI = [
     },
     {
         type: "error",
+        inputs: [{ name: "owner", internalType: "address", type: "address" }],
+        name: "OwnableInvalidOwner",
+    },
+    {
+        type: "error",
+        inputs: [{ name: "account", internalType: "address", type: "address" }],
+        name: "OwnableUnauthorizedAccount",
+    },
+    {
+        type: "error",
         inputs: [{ name: "amount", internalType: "uint256", type: "uint256" }],
         name: "WithdrawOracleFeeFailed",
     },
     {
         type: "event",
         anonymous: false,
-        inputs: [{ name: "version", internalType: "uint8", type: "uint8", indexed: false }],
-        name: "Initialized",
+        inputs: [
+            { name: "maxPriceAge", internalType: "uint256", type: "uint256", indexed: false },
+            { name: "oldMaxPriceAge", internalType: "uint256", type: "uint256", indexed: false },
+        ],
+        name: "MaxPriceAgeSet",
     },
     {
         type: "event",
@@ -1700,10 +1723,16 @@ export const pythOracleAdapterABI = [
         ],
         name: "OwnershipTransferred",
     },
-    { stateMutability: "nonpayable", type: "function", inputs: [], name: "acceptOwnership", outputs: [] },
-    { stateMutability: "payable", type: "function", inputs: [], name: "depositOracleFee", outputs: [] },
+    { type: "function", inputs: [], name: "acceptOwnership", outputs: [], stateMutability: "nonpayable" },
+    { type: "function", inputs: [], name: "depositOracleFee", outputs: [], stateMutability: "payable" },
     {
+        type: "function",
+        inputs: [],
+        name: "getMaxPriceAge",
+        outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
         stateMutability: "view",
+    },
+    {
         type: "function",
         inputs: [{ name: "priceFeedId", internalType: "bytes32", type: "bytes32" }],
         name: "getPrice",
@@ -1711,52 +1740,52 @@ export const pythOracleAdapterABI = [
             { name: "", internalType: "uint256", type: "uint256" },
             { name: "", internalType: "uint256", type: "uint256" },
         ],
-    },
-    {
-        stateMutability: "nonpayable",
-        type: "function",
-        inputs: [{ name: "_pyth", internalType: "address", type: "address" }],
-        name: "initialize",
-        outputs: [],
-    },
-    {
         stateMutability: "view",
+    },
+    {
+        type: "function",
+        inputs: [],
+        name: "getPyth",
+        outputs: [{ name: "", internalType: "address", type: "address" }],
+        stateMutability: "view",
+    },
+    {
         type: "function",
         inputs: [],
         name: "owner",
         outputs: [{ name: "", internalType: "address", type: "address" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [],
         name: "pendingOwner",
         outputs: [{ name: "", internalType: "address", type: "address" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [{ name: "priceFeedId", internalType: "bytes32", type: "bytes32" }],
         name: "priceFeedExists",
         outputs: [{ name: "", internalType: "bool", type: "bool" }],
-    },
-    {
         stateMutability: "view",
-        type: "function",
-        inputs: [],
-        name: "pyth",
-        outputs: [{ name: "", internalType: "contract IPyth", type: "address" }],
     },
-    { stateMutability: "nonpayable", type: "function", inputs: [], name: "renounceOwnership", outputs: [] },
+    { type: "function", inputs: [], name: "renounceOwnership", outputs: [], stateMutability: "nonpayable" },
     {
+        type: "function",
+        inputs: [{ name: "maxPriceAge", internalType: "uint256", type: "uint256" }],
+        name: "setMaxPriceAge",
+        outputs: [],
         stateMutability: "nonpayable",
+    },
+    {
         type: "function",
         inputs: [{ name: "newOwner", internalType: "address", type: "address" }],
         name: "transferOwnership",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             { name: "priceFeedId", internalType: "bytes32", type: "bytes32" },
@@ -1764,40 +1793,42 @@ export const pythOracleAdapterABI = [
         ],
         name: "updatePrice",
         outputs: [],
+        stateMutability: "nonpayable",
     },
-    { stateMutability: "nonpayable", type: "function", inputs: [], name: "withdrawOracleFee", outputs: [] },
+    { type: "function", inputs: [], name: "withdrawOracleFee", outputs: [], stateMutability: "nonpayable" },
 ] as const
 
-export const pythOracleAdapterAddress = "0xe2986e0bC2e6D4A7c271e24f7b45309A23f1d496" as const
+export const pythOracleAdapterAddress = "0xb53A7d72851233e32D345Ffb9c535FE3Dfa3DA0E" as const
 
-export const pythOracleAdapterConfig = { address: pythOracleAdapterAddress, abi: pythOracleAdapterABI } as const
+export const pythOracleAdapterConfig = { address: pythOracleAdapterAddress, abi: pythOracleAdapterAbi } as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Quoter
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const quoterABI = [
+export const quoterAbi = [
     {
-        stateMutability: "nonpayable",
         type: "constructor",
-        inputs: [{ name: "_addressManager", internalType: "address", type: "address" }],
+        inputs: [{ name: "addressManager", internalType: "address", type: "address" }],
+        stateMutability: "nonpayable",
     },
     { type: "error", inputs: [], name: "InternalQuoteShouldRevert" },
+    { type: "error", inputs: [], name: "InvalidInitialization" },
+    { type: "error", inputs: [], name: "NotInitializing" },
     {
         type: "event",
         anonymous: false,
-        inputs: [{ name: "version", internalType: "uint8", type: "uint8", indexed: false }],
+        inputs: [{ name: "version", internalType: "uint64", type: "uint64", indexed: false }],
         name: "Initialized",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [],
-        name: "addressManager",
+        name: "getAddressManager",
         outputs: [{ name: "", internalType: "contract IAddressManager", type: "address" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             {
@@ -1821,21 +1852,37 @@ export const quoterABI = [
             { name: "", internalType: "int256", type: "int256" },
             { name: "", internalType: "int256", type: "int256" },
         ],
+        stateMutability: "nonpayable",
     },
 ] as const
 
-export const quoterAddress = "0x466d56192b80f90e58f7C1602A6AE041542A377D" as const
+export const quoterAddress = "0x8F6211cf5DE4f50EC5bD888De6315B89979315eD" as const
 
-export const quoterConfig = { address: quoterAddress, abi: quoterABI } as const
+export const quoterConfig = { address: quoterAddress, abi: quoterAbi } as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Vault
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const vaultABI = [
-    { stateMutability: "nonpayable", type: "constructor", inputs: [] },
+export const vaultAbi = [
+    { type: "constructor", inputs: [], stateMutability: "nonpayable" },
+    { type: "error", inputs: [{ name: "target", internalType: "address", type: "address" }], name: "AddressEmptyCode" },
+    {
+        type: "error",
+        inputs: [{ name: "account", internalType: "address", type: "address" }],
+        name: "AddressInsufficientBalance",
+    },
     { type: "error", inputs: [], name: "AuthorizationAlreadySet" },
+    {
+        type: "error",
+        inputs: [
+            { name: "authorizer", internalType: "address", type: "address" },
+            { name: "authorized", internalType: "address", type: "address" },
+        ],
+        name: "AuthorizerNotAllow",
+    },
     { type: "error", inputs: [], name: "DepositCapExceeded" },
+    { type: "error", inputs: [], name: "FailedInnerCall" },
     {
         type: "error",
         inputs: [
@@ -1845,6 +1892,7 @@ export const vaultABI = [
         ],
         name: "InsufficientFund",
     },
+    { type: "error", inputs: [], name: "InvalidInitialization" },
     { type: "error", inputs: [{ name: "marketId", internalType: "uint256", type: "uint256" }], name: "InvalidMarket" },
     {
         type: "error",
@@ -1862,7 +1910,24 @@ export const vaultABI = [
         ],
         name: "NotEnoughFreeCollateral",
     },
+    { type: "error", inputs: [], name: "NotInitializing" },
     { type: "error", inputs: [], name: "NotWhitelistedAuthorization" },
+    { type: "error", inputs: [], name: "ReentrancyGuardReentrantCall" },
+    {
+        type: "error",
+        inputs: [{ name: "value", internalType: "int256", type: "int256" }],
+        name: "SafeCastOverflowedIntToUint",
+    },
+    {
+        type: "error",
+        inputs: [{ name: "value", internalType: "uint256", type: "uint256" }],
+        name: "SafeCastOverflowedUintToInt",
+    },
+    {
+        type: "error",
+        inputs: [{ name: "token", internalType: "address", type: "address" }],
+        name: "SafeERC20FailedOperation",
+    },
     { type: "error", inputs: [], name: "Unauthorized" },
     { type: "error", inputs: [], name: "ZeroAmount" },
     {
@@ -1870,7 +1935,7 @@ export const vaultABI = [
         anonymous: false,
         inputs: [
             { name: "authorizer", internalType: "address", type: "address", indexed: true },
-            { name: "authroized", internalType: "address", type: "address", indexed: true },
+            { name: "authorized", internalType: "address", type: "address", indexed: true },
             { name: "isAuthorized", internalType: "bool", type: "bool", indexed: false },
         ],
         name: "AuthorizationSet",
@@ -1896,7 +1961,7 @@ export const vaultABI = [
     {
         type: "event",
         anonymous: false,
-        inputs: [{ name: "version", internalType: "uint8", type: "uint8", indexed: false }],
+        inputs: [{ name: "version", internalType: "uint64", type: "uint64", indexed: false }],
         name: "Initialized",
     },
     {
@@ -1938,24 +2003,16 @@ export const vaultABI = [
         name: "PositionChanged",
     },
     {
-        stateMutability: "view",
-        type: "function",
-        inputs: [],
-        name: "addressManager",
-        outputs: [{ name: "", internalType: "contract IAddressManager", type: "address" }],
-    },
-    {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             { name: "trader", internalType: "address", type: "address" },
-            { name: "amount", internalType: "uint256", type: "uint256" },
+            { name: "amountXCD", internalType: "uint256", type: "uint256" },
         ],
         name: "deposit",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -1964,23 +2021,30 @@ export const vaultABI = [
         ],
         name: "getAccountValue",
         outputs: [{ name: "", internalType: "int256", type: "int256" }],
+        stateMutability: "view",
     },
     {
+        type: "function",
+        inputs: [],
+        name: "getAddressManager",
+        outputs: [{ name: "", internalType: "contract IAddressManager", type: "address" }],
         stateMutability: "view",
+    },
+    {
         type: "function",
         inputs: [{ name: "marketId", internalType: "uint256", type: "uint256" }],
         name: "getBadDebt",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [],
         name: "getCollateralToken",
         outputs: [{ name: "", internalType: "address", type: "address" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -1989,9 +2053,9 @@ export const vaultABI = [
         ],
         name: "getFreeCollateral",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -2001,9 +2065,9 @@ export const vaultABI = [
         ],
         name: "getFreeCollateralForTrade",
         outputs: [{ name: "", internalType: "int256", type: "int256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -2011,16 +2075,16 @@ export const vaultABI = [
         ],
         name: "getFreeMargin",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [{ name: "trader", internalType: "address", type: "address" }],
         name: "getFund",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -2028,9 +2092,9 @@ export const vaultABI = [
         ],
         name: "getMargin",
         outputs: [{ name: "", internalType: "int256", type: "int256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -2039,9 +2103,9 @@ export const vaultABI = [
         ],
         name: "getMarginRatio",
         outputs: [{ name: "", internalType: "int256", type: "int256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -2050,9 +2114,9 @@ export const vaultABI = [
         ],
         name: "getMarginRequirement",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -2060,9 +2124,9 @@ export const vaultABI = [
         ],
         name: "getOpenNotional",
         outputs: [{ name: "", internalType: "int256", type: "int256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -2070,16 +2134,16 @@ export const vaultABI = [
         ],
         name: "getPendingMargin",
         outputs: [{ name: "", internalType: "int256", type: "int256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [{ name: "marketId", internalType: "uint256", type: "uint256" }],
         name: "getPnlPoolBalance",
         outputs: [{ name: "", internalType: "uint256", type: "uint256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -2087,9 +2151,9 @@ export const vaultABI = [
         ],
         name: "getPositionSize",
         outputs: [{ name: "", internalType: "int256", type: "int256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -2097,9 +2161,9 @@ export const vaultABI = [
         ],
         name: "getSettledMargin",
         outputs: [{ name: "", internalType: "int256", type: "int256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -2108,9 +2172,9 @@ export const vaultABI = [
         ],
         name: "getUnrealizedPnl",
         outputs: [{ name: "", internalType: "int256", type: "int256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
@@ -2118,19 +2182,19 @@ export const vaultABI = [
         ],
         name: "getUnsettledPnl",
         outputs: [{ name: "", internalType: "int256", type: "int256" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
-            { name: "_addressManager", internalType: "address", type: "address" },
+            { name: "addressManager", internalType: "address", type: "address" },
             { name: "collateralToken", internalType: "address", type: "address" },
         ],
         name: "initialize",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "view",
         type: "function",
         inputs: [
             { name: "authorizer", internalType: "address", type: "address" },
@@ -2138,9 +2202,9 @@ export const vaultABI = [
         ],
         name: "isAuthorized",
         outputs: [{ name: "", internalType: "bool", type: "bool" }],
+        stateMutability: "view",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             { name: "authorized", internalType: "address", type: "address" },
@@ -2148,9 +2212,9 @@ export const vaultABI = [
         ],
         name: "setAuthorization",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             {
@@ -2169,82 +2233,82 @@ export const vaultABI = [
         ],
         name: "settlePosition",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
-        type: "function",
-        inputs: [
-            { name: "marketId", internalType: "uint256", type: "uint256" },
-            { name: "from", internalType: "address", type: "address" },
-            { name: "to", internalType: "address", type: "address" },
-            { name: "amount", internalType: "uint256", type: "uint256" },
-        ],
-        name: "transfer",
-        outputs: [],
-    },
-    {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             { name: "from", internalType: "address", type: "address" },
             { name: "to", internalType: "address", type: "address" },
-            { name: "amount", internalType: "uint256", type: "uint256" },
+            { name: "amountXCD", internalType: "uint256", type: "uint256" },
         ],
         name: "transferFund",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
             { name: "trader", internalType: "address", type: "address" },
-            { name: "amount", internalType: "uint256", type: "uint256" },
+            { name: "amountXCD", internalType: "uint256", type: "uint256" },
         ],
         name: "transferFundToMargin",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
-            { name: "amount", internalType: "uint256", type: "uint256" },
+            { name: "amountXCD", internalType: "uint256", type: "uint256" },
         ],
         name: "transferFundToMargin",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
+        type: "function",
+        inputs: [
+            { name: "marketId", internalType: "uint256", type: "uint256" },
+            { name: "from", internalType: "address", type: "address" },
+            { name: "to", internalType: "address", type: "address" },
+            { name: "amount", internalType: "uint256", type: "uint256" },
+        ],
+        name: "transferMargin",
+        outputs: [],
         stateMutability: "nonpayable",
+    },
+    {
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
             { name: "trader", internalType: "address", type: "address" },
-            { name: "amount", internalType: "uint256", type: "uint256" },
+            { name: "amountXCD", internalType: "uint256", type: "uint256" },
         ],
         name: "transferMarginToFund",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
         inputs: [
             { name: "marketId", internalType: "uint256", type: "uint256" },
-            { name: "amount", internalType: "uint256", type: "uint256" },
+            { name: "amountXCD", internalType: "uint256", type: "uint256" },
         ],
         name: "transferMarginToFund",
         outputs: [],
+        stateMutability: "nonpayable",
     },
     {
-        stateMutability: "nonpayable",
         type: "function",
-        inputs: [{ name: "amount", internalType: "uint256", type: "uint256" }],
+        inputs: [{ name: "amountXCD", internalType: "uint256", type: "uint256" }],
         name: "withdraw",
         outputs: [],
+        stateMutability: "nonpayable",
     },
-    { stateMutability: "nonpayable", type: "function", inputs: [], name: "withdrawAllCollateral", outputs: [] },
 ] as const
 
-export const vaultAddress = "0x8e185D536134F3e37056eb5b03456Cd469B5b2b6" as const
+export const vaultAddress = "0xF957577b04c6964276FEC51B3AA4AAC419B3b44b" as const
 
-export const vaultConfig = { address: vaultAddress, abi: vaultABI } as const
+export const vaultConfig = { address: vaultAddress, abi: vaultAbi } as const
