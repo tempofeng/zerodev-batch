@@ -140,7 +140,7 @@ describe("ZeroDevClient test", () => {
         }
     }
 
-    test<TestContext>("test sign TypedData", { timeout }, async ctx => {
+    test<TestContext>("test cancelling order", { timeout }, async ctx => {
         const typedData = createTypedData(ctx.kernelClient.account.address)
         console.log("typedData", safeJsonStringify(typedData))
 
@@ -180,7 +180,7 @@ describe("ZeroDevClient test", () => {
         expect(response.result).toEqual(true)
     })
 
-    test<TestContext>("test sign TypedData 2", { timeout }, async ctx => {
+    test<TestContext>("test signing TypedData using singMessage", { timeout }, async ctx => {
         const typedData = createTypedData(ctx.kernelClient.account.address)
         console.log("typedData", safeJsonStringify(typedData))
 
