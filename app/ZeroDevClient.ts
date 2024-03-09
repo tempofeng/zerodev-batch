@@ -22,7 +22,7 @@ import {
     getAbiItem,
     Hex,
     http,
-    PublicClient,
+    PublicClient, SignableMessage,
     toFunctionSelector,
     Transport,
     WalletClient,
@@ -56,7 +56,7 @@ export class ZeroDevClient {
         return kernelClient.account.signTypedData(typedData)
     }
 
-    async signMessage(kernelClient: CreateKernelAccountClientReturnType, message: string) {
+    async signMessage(kernelClient: CreateKernelAccountClientReturnType, message: SignableMessage) {
         return kernelClient.account.signMessage({ message })
     }
 
