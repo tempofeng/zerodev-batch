@@ -251,6 +251,23 @@ describe("ZeroDevClient test", () => {
         console.log("isValidOnUniversalSigValidator", isValidOnUniversalSigValidator)
         expect(isValidOnUniversalSigValidator).toEqual(true)
 
+        const isValidSimpleOrder = await getAction(
+            ctx.kernelClient.account.client,
+            readContract,
+        )({
+            abi: MockTypedRequestorAbi,
+            address: MOCK_TYPED_REQUESTOR_ADDRESS,
+            functionName: "verifySimpleOrderSignature",
+            args: [{
+                order: {
+                    orderHash: finalDigest,
+                    owner: typedData.message.owner,
+                },
+                signature,
+            }],
+        })
+        console.log("isValidSimpleOrder", isValidSimpleOrder)
+
         const isTypedValid = await ctx.publicClient.simulateContract({
             abi: orderGatewayV2Abi,
             address: ORDER_GATEWAY_V2_ADDRESS,
