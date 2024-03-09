@@ -41,6 +41,16 @@ contract MockTypedRequestor is EIP712Upgradeable {
         bytes signature;
     }
 
+    struct SimpleOrder {
+        bytes32 orderHash;
+        address owner;
+    }
+
+    struct SignedSimpleOrder {
+        SimpleOrder order;
+        bytes signature;
+    }
+
     // keccak256 value: 0x112f24273953496214afa22f35960e8571a3ae064d87213f08f46499ee5faf09
     bytes32 public constant ORDER_TYPEHASH =
     keccak256(
@@ -51,7 +61,7 @@ contract MockTypedRequestor is EIP712Upgradeable {
         return _hashTypedDataV4(keccak256(abi.encode(ORDER_TYPEHASH, order)));
     }
 
-    function verifySignature(address kernel, bytes32 hash, bytes calldata signature) external payable returns (bool) {
+    function verifySignature(address kernel, bytes32 hash, bytes calldata signature) external view returns (bool) {
         return KernelERC1271(kernel).isValidSignature(hash, signature) == 0x1626ba7e;
     }
 
@@ -65,5 +75,10 @@ contract MockTypedRequestor is EIP712Upgradeable {
         Order memory order = signedOrder.order;
         bytes32 orderHash = getOrderHash(order);
         return KernelERC1271(order.owner).isValidSignature(orderHash, signedOrder.signature) == 0x1626ba7e;
+    }
+
+    function verifySimpleOrderSignature(SignedSimpleOrder memory signedOrder) public view returns (bool) {
+        SimpleOrder memory order = signedOrder.order;
+        return KernelERC1271(order.owner).isValidSignature(order.orderHash, signedOrder.signature) == 0x1626ba7e;
     }
 }

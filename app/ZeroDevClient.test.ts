@@ -23,7 +23,6 @@ import {
 import { optimismSepolia } from "viem/chains"
 import { beforeEach, describe, expect, test } from "vitest"
 import { ZeroDevClient } from "@/app/ZeroDevClient"
-import * as dotenv from "dotenv"
 import { getAction } from "permissionless"
 import { readContract } from "viem/actions"
 import { MockRequestorAbi } from "@/app/types/wagmi/MockRequestorAbi"
@@ -221,7 +220,10 @@ describe("ZeroDevClient test", () => {
         })
         console.log("isValidOnEip1271", isValidOnEip1271)
 
-        const isValidOnTypedEip712 = await ctx.publicClient.simulateContract({
+        const isValidOnTypedEip712 = await getAction(
+            ctx.kernelClient.account.client,
+            readContract,
+        )({
             abi: MockTypedRequestorAbi,
             address: MOCK_TYPED_REQUESTOR_ADDRESS,
             functionName: "verifySignature",
@@ -231,7 +233,7 @@ describe("ZeroDevClient test", () => {
                 signature,
             ],
         })
-        console.log("isValidOnTypedEip712", isValidOnTypedEip712.result)
+        console.log("isValidOnTypedEip712", isValidOnTypedEip712)
 
         const isValidOnUniversalSigValidator = await getAction(
             ctx.kernelClient.account.client,

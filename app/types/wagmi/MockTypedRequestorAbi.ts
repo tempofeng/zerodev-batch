@@ -150,6 +150,26 @@ export const MockTypedRequestorAbi = [{
     }, { "internalType": "bytes", "name": "signature", "type": "bytes" }],
     "name": "verifySignature",
     "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "payable",
+    "stateMutability": "view",
+    "type": "function",
+}, {
+    "inputs": [{
+        "components": [{
+            "components": [{
+                "internalType": "bytes32",
+                "name": "orderHash",
+                "type": "bytes32",
+            }, { "internalType": "address", "name": "owner", "type": "address" }],
+            "internalType": "struct MockTypedRequestor.SimpleOrder",
+            "name": "order",
+            "type": "tuple",
+        }, { "internalType": "bytes", "name": "signature", "type": "bytes" }],
+        "internalType": "struct MockTypedRequestor.SignedSimpleOrder",
+        "name": "signedOrder",
+        "type": "tuple",
+    }],
+    "name": "verifySimpleOrderSignature",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
     "type": "function",
 }] as const
