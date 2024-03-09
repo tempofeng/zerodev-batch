@@ -1,15 +1,12 @@
 "use client"
 
 import { Web3Provider } from "./Web3Provider"
-import { optimismSepolia } from "viem/chains"
 import { Address, createPublicClient, encodeFunctionData, erc20Abi, hashMessage, Hex, http, PublicClient } from "viem"
 import { ZeroDevClient } from "@/app/ZeroDevClient"
 import { big2Bigint } from "@/app/bn"
 import Big from "big.js"
 import { useState } from "react"
 import { toMerklePolicy, toSignaturePolicy } from "@zerodev/modular-permission/policies"
-import { WebAuthnMode } from "@zerodev/modular-permission/signers"
-import { clearingHouseABI, vaultABI } from "@/app/types/wagmi/generated"
 import { verifyMessage } from "@ambire/signature-validator"
 import { ethers } from "ethers"
 import { verifyEIP6492Signature } from "@zerodev/sdk"
@@ -18,22 +15,24 @@ import { readContract } from "viem/actions"
 import { MockRequestorAbi } from "@/app/types/wagmi/MockRequestorAbi"
 import { MockTypedRequestorAbi } from "@/app/types/wagmi/MockTypedRequestorAbi"
 import { safeJsonStringify } from "@walletconnect/safe-json"
-
-const zeroDevProjectId = process.env.NEXT_PUBLIC_ZERODEV_PROJECT_ID!
-const USDT_ADDRESS = "0xA8Eba06366A8ad5E59Ef29477E7a4B384ea648Bf" as Address
-const VAULT_ADDRESS = "0xF1D51901302EaF6027BeA4a7D666a1BE337ca6bb" as Address
-const CLEARING_HOUSE_ADDRESS = "0x2000d0a1c77fC54EDA12C3ae564d760F7ac7ebf2" as Address
-const ORDER_GATEWAY_V2_ADDRESS = "0xCb134B6101494b46506578324EbCbaefcAcFCE20" as Address
-const MOCK_REQUESTOR_ADDRESS = "0x7da959782170Ed107ce769e43B4d87bb1F3F6aE5" as Address
-const MOCK_TYPED_REQUESTOR_ADDRESS = "0xF553acD6887f3FF17fD7e8CBFC2d2E69aE602511" as Address
-const UNIVERSAL_SIG_VALIDATOR_ADDRESS = "0x59799642351a51b263922fc95837Ea55A2CDc7E2" as Address
-const chain = optimismSepolia
-const sessionPrivateKey = process.env.NEXT_PUBLIC_SESSION_PRIVATE_KEY! as Hex
-const isSerialized = true
-const isUsingSessionKey = true
-const webAuthnMode = WebAuthnMode.Login
-const passkeyName = "passkey"
-const useAmbireSignatureValidator = false
+import { clearingHouseAbi, orderGatewayV2Abi, vaultAbi } from "./types/wagmi/generated"
+import {
+    chain,
+    CLEARING_HOUSE_ADDRESS,
+    isSerialized,
+    isUsingSessionKey,
+    MOCK_REQUESTOR_ADDRESS,
+    MOCK_TYPED_REQUESTOR_ADDRESS,
+    ORDER_GATEWAY_V2_ADDRESS,
+    passkeyName,
+    sessionPrivateKey,
+    UNIVERSAL_SIG_VALIDATOR_ADDRESS,
+    USDT_ADDRESS,
+    useAmbireSignatureValidator,
+    VAULT_ADDRESS,
+    webAuthnMode,
+    zeroDevProjectId,
+} from "@/app/constant"
 
 export default function Home() {
     const [address, setAddress] = useState<Address>()
@@ -56,7 +55,7 @@ export default function Home() {
                         target: VAULT_ADDRESS,
                         valueLimit: BigInt(0),
                         // @ts-ignore
-                        abi: vaultABI,
+                        abi: vaultAbi,
                         // @ts-ignore
                         functionName: "deposit",
                         args: [null, null],
@@ -65,7 +64,7 @@ export default function Home() {
                         target: VAULT_ADDRESS,
                         valueLimit: BigInt(0),
                         // @ts-ignore
-                        abi: vaultABI,
+                        abi: vaultAbi,
                         // @ts-ignore
                         functionName: "withdraw",
                         args: [null],
@@ -74,7 +73,7 @@ export default function Home() {
                         target: VAULT_ADDRESS,
                         valueLimit: BigInt(0),
                         // @ts-ignore
-                        abi: vaultABI,
+                        abi: vaultAbi,
                         // @ts-ignore
                         functionName: "transferFundToMargin",
                         args: [null, null],
@@ -83,7 +82,7 @@ export default function Home() {
                         target: VAULT_ADDRESS,
                         valueLimit: BigInt(0),
                         // @ts-ignore
-                        abi: vaultABI,
+                        abi: vaultAbi,
                         // @ts-ignore
                         functionName: "transferMarginToFund",
                         args: [null, null],
@@ -92,7 +91,7 @@ export default function Home() {
                         target: VAULT_ADDRESS,
                         valueLimit: BigInt(0),
                         // @ts-ignore
-                        abi: vaultABI,
+                        abi: vaultAbi,
                         // @ts-ignore
                         functionName: "setAuthorization",
                         args: [null, null],
@@ -101,15 +100,24 @@ export default function Home() {
                         target: CLEARING_HOUSE_ADDRESS,
                         valueLimit: BigInt(0),
                         // @ts-ignore
-                        abi: clearingHouseABI,
+                        abi: clearingHouseAbi,
                         // @ts-ignore
                         functionName: "setAuthorization",
+                        args: [null, null],
+                    },
+                    {
+                        target: ORDER_GATEWAY_V2_ADDRESS,
+                        valueLimit: BigInt(0),
+                        // @ts-ignore
+                        abi: orderGatewayV2Abi,
+                        // @ts-ignore
+                        functionName: "cancelOrder",
                         args: [null, null],
                     },
                 ],
             }),
             await toSignaturePolicy({
-                allowedRequestors: [MOCK_REQUESTOR_ADDRESS, MOCK_TYPED_REQUESTOR_ADDRESS, UNIVERSAL_SIG_VALIDATOR_ADDRESS],
+                allowedRequestors: [UNIVERSAL_SIG_VALIDATOR_ADDRESS, ORDER_GATEWAY_V2_ADDRESS, MOCK_REQUESTOR_ADDRESS, MOCK_TYPED_REQUESTOR_ADDRESS],
             }),
         ]
     }
