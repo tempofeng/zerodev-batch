@@ -41,6 +41,12 @@ contract MockTypedRequestor is EIP712Upgradeable {
         bytes signature;
     }
 
+    struct SignedOrderWithHash {
+        Order order;
+        bytes signature;
+        bytes32 orderHash;
+    }
+
     struct SimpleOrder {
         bytes32 orderHash;
         address owner;
@@ -75,6 +81,14 @@ contract MockTypedRequestor is EIP712Upgradeable {
         Order memory order = signedOrder.order;
         bytes32 orderHash = getOrderHash(order);
         return KernelERC1271(order.owner).isValidSignature(orderHash, signedOrder.signature) == 0x1626ba7e;
+    }
+
+    function verifyOrderSignature3(SignedOrderWithHash memory signedOrder) public view returns (bool) {
+        Order memory order = signedOrder.order;
+        bytes32 orderHash = getOrderHash(order);
+        assert(orderHash == signedOrder.orderHash);
+
+        return KernelERC1271(order.owner).isValidSignature(signedOrder.orderHash, signedOrder.signature) == 0x1626ba7e;
     }
 
     function verifySimpleOrderSignature(SignedSimpleOrder memory signedOrder) public view returns (bool) {

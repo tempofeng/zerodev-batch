@@ -108,7 +108,7 @@ describe("ZeroDevClient test", () => {
                 name: "OrderGatewayV2",
                 version: "1",
                 chainId: chain.id,
-                verifyingContract: ORDER_GATEWAY_V2_ADDRESS,
+                verifyingContract: MOCK_TYPED_REQUESTOR_ADDRESS,
             },
             types: {
                 Order: [
@@ -190,8 +190,8 @@ describe("ZeroDevClient test", () => {
             ctx.kernelClient.account.client,
             readContract,
         )({
-            abi: orderGatewayV2Abi,
-            address: ORDER_GATEWAY_V2_ADDRESS,
+            abi: MockTypedRequestorAbi,
+            address: MOCK_TYPED_REQUESTOR_ADDRESS,
             functionName: "getOrderHash",
             args: [typedData.message],
         }) as Hex
@@ -281,6 +281,21 @@ describe("ZeroDevClient test", () => {
             }],
         })
         console.log("isTypedValid2", isTypedValid2)
+
+        const isTypedValid3 = await getAction(
+            ctx.kernelClient.account.client,
+            readContract,
+        )({
+            abi: MockTypedRequestorAbi,
+            address: MOCK_TYPED_REQUESTOR_ADDRESS,
+            functionName: "verifyOrderSignature3",
+            args: [{
+                order: typedData.message,
+                signature,
+                orderHash: finalDigest,
+            }],
+        })
+        console.log("isTypedValid3", isTypedValid3)
 
         const isTypedValid = await ctx.publicClient.simulateContract({
             abi: orderGatewayV2Abi,
