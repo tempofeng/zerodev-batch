@@ -7,38 +7,37 @@ import { big2Bigint } from "@/app/bn"
 import Big from "big.js"
 import { useState } from "react"
 import { toMerklePolicy, toSignaturePolicy } from "@zerodev/modular-permission/policies"
-import { verifyMessage } from "@ambire/signature-validator"
-import { ethers } from "ethers"
-import { verifyEIP6492Signature } from "@zerodev/sdk"
+import { utils } from "ethers"
 import { getAction } from "permissionless"
 import { readContract } from "viem/actions"
-import { MockRequestorAbi } from "@/app/types/wagmi/MockRequestorAbi"
-import { MockTypedRequestorAbi } from "@/app/types/wagmi/MockTypedRequestorAbi"
 import { safeJsonStringify } from "@walletconnect/safe-json"
 import { clearingHouseAbi, orderGatewayV2Abi, vaultAbi } from "./types/wagmi/generated"
 import {
     chain,
     CLEARING_HOUSE_ADDRESS,
-    isSerialized,
-    isUsingSessionKey,
     MOCK_REQUESTOR_ADDRESS,
     MOCK_TYPED_REQUESTOR_ADDRESS,
     ORDER_GATEWAY_V2_ADDRESS,
-    passkeyName,
-    sessionPrivateKey,
-    UNIVERSAL_SIG_VALIDATOR_ADDRESS,
+    ORDER_GATEWAY_V2_IMPL_ADDRESS,
     USDT_ADDRESS,
-    useAmbireSignatureValidator,
     VAULT_ADDRESS,
-    webAuthnMode,
-    zeroDevProjectId,
 } from "@/app/constant"
+import { WebAuthnMode } from "@zerodev/modular-permission/signers"
+import { MockTypedRequestorAbi } from "@/app/types/wagmi/MockTypedRequestorAbi"
+import { generatePrivateKey } from "viem/accounts"
+
+const zeroDevProjectId = process.env.NEXT_PUBLIC_ZERODEV_PROJECT_ID!
+
+const isSerialized = false
+const isUsingSessionKey = true
 
 export default function Home() {
     const [address, setAddress] = useState<Address>()
     const [userOpHash, setUserOpHash] = useState<Hex>()
     const [signature, setSignature] = useState<Hex>()
     const [isValidSig, setIsValidSig] = useState<boolean>()
+    const [webAuthnMode, setWebAuthnMode] = useState(WebAuthnMode.Login)
+    const [passkeyName, setPasskeyName] = useState("passkey")
 
     const createPolicies = async () => {
         return [
@@ -117,7 +116,7 @@ export default function Home() {
                 ],
             }),
             await toSignaturePolicy({
-                allowedRequestors: [UNIVERSAL_SIG_VALIDATOR_ADDRESS, ORDER_GATEWAY_V2_ADDRESS, MOCK_REQUESTOR_ADDRESS, MOCK_TYPED_REQUESTOR_ADDRESS],
+                allowedRequestors: [ORDER_GATEWAY_V2_IMPL_ADDRESS, ORDER_GATEWAY_V2_ADDRESS, MOCK_REQUESTOR_ADDRESS, MOCK_TYPED_REQUESTOR_ADDRESS],
             }),
         ]
     }
@@ -133,6 +132,7 @@ export default function Home() {
     async function createKernelClient(publicClient: PublicClient, zeroDevClient: ZeroDevClient) {
         if (isUsingSessionKey) {
             const policies = await createPolicies()
+            const sessionPrivateKey = generatePrivateKey()
             const kernelAccount = await zeroDevClient.createPasskeySessionKeyKernelAccount(publicClient, passkeyName, webAuthnMode, policies, sessionPrivateKey)
             if (isSerialized) {
                 const serializedSessionKeyAccount = await zeroDevClient.serializeSessionKeyKernelClient(
@@ -167,31 +167,12 @@ export default function Home() {
         setSignature(signature)
         console.log("signature", signature)
 
-        let isValidSig: boolean
-        if (useAmbireSignatureValidator) {
-            const provider = new ethers.providers.JsonRpcProvider("https://sepolia.optimism.io")
-            isValidSig = await verifyMessage({
-                signer: kernelClient.account.address,
-                message,
-                signature,
-                provider,
-            })
-        } else {
-            isValidSig = await verifyEIP6492Signature({
-                signer: kernelClient.account.address, // your smart account address
-                hash: hashMessage(message),
-                signature: signature,
-                client: publicClient,
-            })
-        }
-        console.log("isValidSig", isValidSig)
-
-        const response = await getAction(
+        const isValidOnEip1271 = await getAction(
             kernelClient.account.client,
             readContract,
         )({
-            abi: MockRequestorAbi,
-            address: MOCK_REQUESTOR_ADDRESS,
+            abi: MockTypedRequestorAbi,
+            address: MOCK_TYPED_REQUESTOR_ADDRESS,
             functionName: "verifySignature",
             args: [
                 kernelClient.account.address,
@@ -199,8 +180,8 @@ export default function Home() {
                 signature,
             ],
         })
-        console.log("Signature verified response: ", response)
-        setIsValidSig(response)
+        console.log("isValidOnEip1271", isValidOnEip1271)
+        setIsValidSig(isValidOnEip1271)
     }
 
     const signTypedData = async () => {
@@ -214,7 +195,7 @@ export default function Home() {
 
         const typedData = {
             domain: {
-                name: "MockTypedRequestor",
+                name: "OrderGatewayV2",
                 version: "1",
                 chainId: 11155420,
                 verifyingContract: MOCK_TYPED_REQUESTOR_ADDRESS,
@@ -248,22 +229,27 @@ export default function Home() {
         }
         console.log("typedData", safeJsonStringify(typedData))
 
+        const orderHash = await getAction(
+            kernelClient.account.client,
+            readContract,
+        )({
+            abi: MockTypedRequestorAbi,
+            address: MOCK_TYPED_REQUESTOR_ADDRESS,
+            functionName: "getOrderHash",
+            args: [typedData.message],
+        }) as Hex
+        console.log("orderHash", orderHash)
+
+        const finalDigest = utils._TypedDataEncoder.hash(
+            typedData.domain,
+            typedData.types,
+            typedData.message,
+        ) as Hex
+        console.log("finalDigest", finalDigest)
+
         const signature = await zeroDevClient.signTypedData(kernelClient, typedData)
         setSignature(signature)
         console.log("signature", signature)
-
-        const provider = new ethers.providers.JsonRpcProvider("https://sepolia.optimism.io")
-        const isValidSig = await verifyMessage({
-            signer: kernelClient.account.address,
-            typedData: {
-                domain: typedData.domain,
-                types: typedData.types,
-                message: typedData.message,
-            },
-            signature,
-            provider,
-        })
-        console.log("isValidSig", isValidSig)
 
         const response = await publicClient.simulateContract({
             abi: MockTypedRequestorAbi,
@@ -274,8 +260,88 @@ export default function Home() {
                 signature,
             }],
         })
-        console.log("Signature verified response: ", response.result)
-        setIsValidSig(response.result)
+        console.log("Signature verified response: ", response.result !== undefined)
+        setIsValidSig(response.result !== undefined)
+    }
+
+    const signTypedDataOnOrderGatewayV2 = async () => {
+        const zeroDevClient = createZeroDevClient()
+        const publicClient = createPublicClient({
+            chain,
+            transport: http(),
+        })
+        const kernelClient = await createKernelClient(publicClient, zeroDevClient)
+        setAddress(kernelClient.account?.address)
+
+        const typedData = {
+            domain: {
+                name: "OrderGatewayV2",
+                version: "1",
+                chainId: 11155420,
+                verifyingContract: ORDER_GATEWAY_V2_ADDRESS,
+            },
+            types: {
+                Order: [
+                    { name: "action", type: "uint8" },
+                    { name: "marketId", type: "uint256" },
+                    { name: "amount", type: "int256" },
+                    { name: "price", type: "uint256" },
+                    { name: "expiry", type: "uint256" },
+                    { name: "tradeType", type: "uint8" },
+                    { name: "owner", type: "address" },
+                    { name: "marginXCD", type: "uint256" },
+                    { name: "relayFee", type: "uint256" },
+                    { name: "id", type: "bytes32" }],
+            },
+            primaryType: "Order",
+            message: {
+                action: 0,
+                marketId: 0n,
+                amount: 2545687128687666n,
+                price: 1000000000000000000000000000000000000000000n,
+                expiry: 1709882290n,
+                tradeType: 1,
+                owner: kernelClient.account.address,
+                marginXCD: 5000000n,
+                relayFee: 1000000n,
+                id: "0x00000000000000000000000000000000336cd3e995be4803a7fe836fb3411deb" as Hex,
+            },
+        }
+        console.log("typedData", safeJsonStringify(typedData))
+
+        const orderHash = await getAction(
+            kernelClient.account.client,
+            readContract,
+        )({
+            abi: orderGatewayV2Abi,
+            address: ORDER_GATEWAY_V2_ADDRESS,
+            functionName: "getOrderHash",
+            args: [typedData.message],
+        }) as Hex
+        console.log("orderHash", orderHash)
+
+        const finalDigest = utils._TypedDataEncoder.hash(
+            typedData.domain,
+            typedData.types,
+            typedData.message,
+        ) as Hex
+        console.log("finalDigest", finalDigest)
+
+        const signature = await zeroDevClient.signTypedData(kernelClient, typedData)
+        setSignature(signature)
+        console.log("signature", signature)
+
+        const response = await publicClient.simulateContract({
+            abi: orderGatewayV2Abi,
+            address: ORDER_GATEWAY_V2_ADDRESS,
+            functionName: "verifyOrderSignature",
+            args: [{
+                order: typedData.message,
+                signature,
+            }],
+        })
+        console.log("Signature verified response: ", response.result !== undefined)
+        setIsValidSig(response.result !== undefined)
     }
 
     const sendUserOps = async () => {
@@ -308,30 +374,47 @@ export default function Home() {
 
     return (
         <Web3Provider>
-            <div className="z-10 w-full items-center justify-between font-mono text-lg lg:flex pt-3 pb-3">
-                <h1 className="underline">Clean example</h1>
-            </div>
-            <div className="w-full">
-                <p>wallet: {address}</p>
-                <p>userOpHash: {userOpHash}</p>
-                <p>signature: {signature}</p>
-                <p>isValidSig: {String(isValidSig)}</p>
-            </div>
-            <button
-                className="m-2 p-2 border-2 border-gray-300 rounded-sm"
-                onClick={sendUserOps}>
-                Send User Ops
-            </button>
-            <button
-                className="m-2 p-2 border-2 border-gray-300 rounded-sm"
-                onClick={signTypedData}>
-                Sign Type Data
-            </button>
-            <button
-                className="m-2 p-2 border-2 border-gray-300 rounded-sm"
-                onClick={signMessage}>
-                Sign Message
-            </button>
+            <main className="flex flex-col items-center justify-between p-24 font-mono">
+                <div className="z-10 w-full items-center justify-between text-lg lg:flex pt-3 pb-3">
+                    <h1 className="underline">Clean example</h1>
+                </div>
+                <div className="z-10 w-full items-center justify-between text-sm lg:flex">
+                    <p>wallet: {address}</p>
+                    <p>userOpHash: {userOpHash}</p>
+                    <p>signature: {signature}</p>
+                    <p>isValidSig: {String(isValidSig)}</p>
+                </div>
+                <div className="z-10 w-full items-center justify-between text-sm lg:flex p-4 m-4">
+                    <input value={passkeyName} onChange={e => setPasskeyName(e.target.value)}></input>
+                    <select value={webAuthnMode}
+                            onChange={e => setWebAuthnMode(e.target.value === "login" ? WebAuthnMode.Login : WebAuthnMode.Register)}>
+                        <option value="login">Login</option>
+                        <option value="register">Register</option>
+                    </select>
+                </div>
+                <div className="z-10 w-full items-center justify-between text-sm lg:flex m-4">
+                    <button
+                        className="m-2 p-2 border-2 border-gray-300 rounded-sm"
+                        onClick={sendUserOps}>
+                        Send User Ops
+                    </button>
+                    <button
+                        className="m-2 p-2 border-2 border-gray-300 rounded-sm"
+                        onClick={signMessage}>
+                        Sign Message
+                    </button>
+                    <button
+                        className="m-2 p-2 border-2 border-gray-300 rounded-sm"
+                        onClick={signTypedDataOnOrderGatewayV2}>
+                        Sign Type Data on OrderGatewayV2
+                    </button>
+                    <button
+                        className="m-2 p-2 border-2 border-gray-300 rounded-sm"
+                        onClick={signTypedData}>
+                        Sign Type Data on MockTypedRequestor
+                    </button>
+                </div>
+            </main>
         </Web3Provider>
     )
 }

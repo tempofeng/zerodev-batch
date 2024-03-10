@@ -1,18 +1,14 @@
 export const MockTypedRequestorAbi = [{
     "inputs": [],
-    "name": "InvalidInitialization",
-    "type": "error",
-}, { "inputs": [], "name": "NotInitializing", "type": "error" }, {
-    "anonymous": false,
-    "inputs": [],
-    "name": "EIP712DomainChanged",
-    "type": "event",
-}, {
-    "anonymous": false,
-    "inputs": [{ "indexed": false, "internalType": "uint64", "name": "version", "type": "uint64" }],
-    "name": "Initialized",
-    "type": "event",
-}, {
+    "stateMutability": "nonpayable",
+    "type": "constructor",
+}, { "inputs": [], "name": "InvalidShortString", "type": "error" }, {
+    "inputs": [{
+        "internalType": "string",
+        "name": "str",
+        "type": "string",
+    }], "name": "StringTooLong", "type": "error",
+}, { "anonymous": false, "inputs": [], "name": "EIP712DomainChanged", "type": "event" }, {
     "inputs": [],
     "name": "ORDER_TYPEHASH",
     "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],

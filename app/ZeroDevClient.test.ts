@@ -3,10 +3,7 @@ import {
     MOCK_REQUESTOR_ADDRESS,
     MOCK_TYPED_REQUESTOR_ADDRESS,
     ORDER_GATEWAY_V2_ADDRESS,
-    serializedSessionKeyAccount,
-    sessionPrivateKey,
     UNIVERSAL_SIG_VALIDATOR_ADDRESS,
-    zeroDevProjectId,
 } from "@/app/constant"
 import {
     Address,
@@ -33,6 +30,13 @@ import { UniversalSigValidatorAbi } from "@/app/types/wagmi/UniversalSigValidato
 import { utils } from "ethers"
 import { privateKeyToAccount } from "viem/accounts"
 import { orderGatewayV2Abi } from "@/app/types/wagmi/generated"
+import * as dotenv from "dotenv"
+
+dotenv.config({ path: ".env.local" })
+
+const zeroDevProjectId = process.env.NEXT_PUBLIC_ZERODEV_PROJECT_ID!
+const sessionPrivateKey = process.env.NEXT_PUBLIC_SESSION_PRIVATE_KEY! as Hex
+const serializedSessionKeyAccount = process.env.NEXT_PUBLIC_SERIALIZED_SESSION_KEY_ACCOUNT!
 
 interface TestContext {
     zeroDevClient: ZeroDevClient
@@ -65,7 +69,7 @@ describe("ZeroDevClient test", () => {
     })
 
     test<TestContext>("test sign message", { timeout }, async ctx => {
-        const message = { raw: ("0xd21946019219e464eb08828e828c5b9319f3419b09ae115db82b652a2390d601" as Hex) }
+        const message = "Hello, world!"
         const signature = await ctx.zeroDevClient.signMessage(ctx.kernelClient, message)
         console.log("signature", signature)
 
@@ -179,7 +183,46 @@ describe("ZeroDevClient test", () => {
         expect(response.result).toEqual(true)
     })
 
-    test<TestContext>("test signing TypedData using singMessage", { timeout }, async ctx => {
+    test<TestContext>("test signing TypedData on OrderGatewayV2", { timeout }, async ctx => {
+        const typedData = createTypedData(ctx.kernelClient.account.address, ORDER_GATEWAY_V2_ADDRESS)
+        console.log("typedData", safeJsonStringify(typedData))
+
+        const signature = await ctx.zeroDevClient.signTypedData(ctx.kernelClient, typedData)
+        console.log("signature", signature)
+
+        const orderHash = await getAction(
+            ctx.kernelClient.account.client,
+            readContract,
+        )({
+            abi: orderGatewayV2Abi,
+            address: ORDER_GATEWAY_V2_ADDRESS,
+            functionName: "getOrderHash",
+            args: [typedData.message],
+        }) as Hex
+        console.log("orderHash", orderHash)
+
+        const finalDigest = utils._TypedDataEncoder.hash(
+            typedData.domain,
+            typedData.types,
+            typedData.message,
+        ) as Hex
+        console.log("finalDigest", finalDigest)
+        expect(finalDigest).toEqual(orderHash)
+
+        const isTypedValid = await ctx.publicClient.simulateContract({
+            abi: orderGatewayV2Abi,
+            address: ORDER_GATEWAY_V2_ADDRESS,
+            functionName: "verifyOrderSignature",
+            args: [{
+                order: typedData.message,
+                signature,
+            }],
+        })
+        console.log("isTypedValid", isTypedValid.result !== undefined)
+        expect(isTypedValid.result !== undefined).toEqual(true)
+    })
+
+    test<TestContext>("test signing TypedData on MockTypedRequestor", { timeout }, async ctx => {
         const typedData = createTypedData(ctx.kernelClient.account.address, MOCK_TYPED_REQUESTOR_ADDRESS)
         console.log("typedData", safeJsonStringify(typedData))
 
@@ -298,8 +341,8 @@ describe("ZeroDevClient test", () => {
         console.log("isTypedValid3", isTypedValid3)
 
         const isTypedValid = await ctx.publicClient.simulateContract({
-            abi: orderGatewayV2Abi,
-            address: ORDER_GATEWAY_V2_ADDRESS,
+            abi: MockTypedRequestorAbi,
+            address: MOCK_TYPED_REQUESTOR_ADDRESS,
             functionName: "verifyOrderSignature",
             args: [{
                 order: typedData.message,
