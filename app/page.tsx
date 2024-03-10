@@ -15,16 +15,17 @@ import { clearingHouseAbi, orderGatewayV2Abi, vaultAbi } from "./types/wagmi/gen
 import {
     chain,
     CLEARING_HOUSE_ADDRESS,
-    MOCK_REQUESTOR_ADDRESS,
     MOCK_TYPED_REQUESTOR_ADDRESS,
     ORDER_GATEWAY_V2_ADDRESS,
-    ORDER_GATEWAY_V2_IMPL_ADDRESS,
+    PERP_UNIVERSAL_SIG_VALIDATOR_ADDRESS,
+    UNIVERSAL_SIG_VALIDATOR_ADDRESS,
     USDT_ADDRESS,
     VAULT_ADDRESS,
 } from "@/app/constant"
 import { WebAuthnMode } from "@zerodev/modular-permission/signers"
 import { MockTypedRequestorAbi } from "@/app/types/wagmi/MockTypedRequestorAbi"
 import { generatePrivateKey } from "viem/accounts"
+import { UniversalSigValidatorAbi } from "@/app/types/wagmi/UniversalSigValidatorAbi"
 
 const zeroDevProjectId = process.env.NEXT_PUBLIC_ZERODEV_PROJECT_ID!
 
@@ -38,6 +39,7 @@ export default function Home() {
     const [isValidSig, setIsValidSig] = useState<boolean>()
     const [webAuthnMode, setWebAuthnMode] = useState(WebAuthnMode.Login)
     const [passkeyName, setPasskeyName] = useState("passkey")
+    const [sessionPrivateKey, setSessionPrivateKey] = useState(generatePrivateKey())
 
     const createPolicies = async () => {
         return [
@@ -116,7 +118,7 @@ export default function Home() {
                 ],
             }),
             await toSignaturePolicy({
-                allowedRequestors: [ORDER_GATEWAY_V2_IMPL_ADDRESS, ORDER_GATEWAY_V2_ADDRESS, MOCK_REQUESTOR_ADDRESS, MOCK_TYPED_REQUESTOR_ADDRESS],
+                allowedRequestors: [MOCK_TYPED_REQUESTOR_ADDRESS, PERP_UNIVERSAL_SIG_VALIDATOR_ADDRESS, UNIVERSAL_SIG_VALIDATOR_ADDRESS, ORDER_GATEWAY_V2_ADDRESS],
             }),
         ]
     }
@@ -132,7 +134,6 @@ export default function Home() {
     async function createKernelClient(publicClient: PublicClient, zeroDevClient: ZeroDevClient) {
         if (isUsingSessionKey) {
             const policies = await createPolicies()
-            const sessionPrivateKey = generatePrivateKey()
             const kernelAccount = await zeroDevClient.createPasskeySessionKeyKernelAccount(publicClient, passkeyName, webAuthnMode, policies, sessionPrivateKey)
             if (isSerialized) {
                 const serializedSessionKeyAccount = await zeroDevClient.serializeSessionKeyKernelClient(
@@ -162,10 +163,25 @@ export default function Home() {
         const kernelClient = await createKernelClient(publicClient, zeroDevClient)
         setAddress(kernelClient.account?.address)
 
-        const message = "Hello, world!"
+        const message = "Hello, world"
         const signature = await zeroDevClient.signMessage(kernelClient, message)
         setSignature(signature)
         console.log("signature", signature)
+
+        const isValidOnUniversalSigValidator = await getAction(
+            kernelClient.account.client,
+            readContract,
+        )({
+            abi: UniversalSigValidatorAbi,
+            address: UNIVERSAL_SIG_VALIDATOR_ADDRESS,
+            functionName: "isValidSig",
+            args: [
+                kernelClient.account.address,
+                hashMessage(message),
+                signature,
+            ],
+        })
+        console.log("isValidOnUniversalSigValidator", isValidOnUniversalSigValidator)
 
         const isValidOnEip1271 = await getAction(
             kernelClient.account.client,
@@ -385,6 +401,12 @@ export default function Home() {
                     <p>isValidSig: {String(isValidSig)}</p>
                 </div>
                 <div className="z-10 w-full items-center justify-between text-sm lg:flex p-4 m-4">
+                    <input value={sessionPrivateKey} onChange={e => setSessionPrivateKey(e.target.value as Hex)}></input>
+                    <button
+                        className="m-2 p-2 border-2 border-gray-300 rounded-sm"
+                        onClick={e => setSessionPrivateKey(generatePrivateKey())}>
+                        Regenerate Private Key
+                    </button>
                     <input value={passkeyName} onChange={e => setPasskeyName(e.target.value)}></input>
                     <select value={webAuthnMode}
                             onChange={e => setWebAuthnMode(e.target.value === "login" ? WebAuthnMode.Login : WebAuthnMode.Register)}>
