@@ -1,0 +1,11 @@
+[profile.default]
+solc_version = "0.8.22"
+evm_version = "paris"
+
+[fmt]
+bracket_spacing = true
+line_length = 120
+tab_width = 4
+
+[rpc_endpoints]
+optimism-sepolia = "${OPTIMISM_SEPOLIA_WEB3_ENDPOINT_ARCHIVE}"
