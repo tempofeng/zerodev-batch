@@ -118,7 +118,7 @@ export default function Home() {
                 ],
             }),
             await toSignaturePolicy({
-                allowedRequestors: [MOCK_TYPED_REQUESTOR_ADDRESS, PERP_UNIVERSAL_SIG_VALIDATOR_ADDRESS, UNIVERSAL_SIG_VALIDATOR_ADDRESS, ORDER_GATEWAY_V2_ADDRESS],
+                allowedRequestors: [PERP_UNIVERSAL_SIG_VALIDATOR_ADDRESS, UNIVERSAL_SIG_VALIDATOR_ADDRESS],
             }),
         ]
     }
@@ -404,7 +404,7 @@ export default function Home() {
                     <input value={sessionPrivateKey} onChange={e => setSessionPrivateKey(e.target.value as Hex)}></input>
                     <button
                         className="m-2 p-2 border-2 border-gray-300 rounded-sm"
-                        onClick={e => setSessionPrivateKey(generatePrivateKey())}>
+                        onClick={() => setSessionPrivateKey(generatePrivateKey())}>
                         Regenerate Private Key
                     </button>
                     <input value={passkeyName} onChange={e => setPasskeyName(e.target.value)}></input>
