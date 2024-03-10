@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.0;
 
-import {EIP712Upgradeable} from "./EIP712Upgradeable.sol";
+import { EIP712 } from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 
 interface IUniversalSigValidator {
     function isValidSig(address _signer, bytes32 _hash, bytes calldata _signature) external returns (bool);
@@ -12,7 +12,7 @@ interface KernelERC1271 {
     function isValidSignature(bytes32 hash, bytes calldata signature) external view returns (bytes4);
 }
 
-contract MockTypedRequestor is EIP712Upgradeable {
+contract MockTypedRequestor is EIP712 {
     enum ActionType {
         OpenPosition,
         ReduceOnly
@@ -57,9 +57,7 @@ contract MockTypedRequestor is EIP712Upgradeable {
         bytes signature;
     }
 
-    constructor() {
-        __EIP712_init("OrderGatewayV2", "1");
-    }
+    constructor() EIP712("OrderGatewayV2", "1") {}
 
     // keccak256 value: 0x112f24273953496214afa22f35960e8571a3ae064d87213f08f46499ee5faf09
     bytes32 public constant ORDER_TYPEHASH =
