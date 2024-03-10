@@ -57,6 +57,10 @@ contract MockTypedRequestor is EIP712Upgradeable {
         bytes signature;
     }
 
+    constructor() {
+        __EIP712_init("OrderGatewayV2", "1");
+    }
+
     // keccak256 value: 0x112f24273953496214afa22f35960e8571a3ae064d87213f08f46499ee5faf09
     bytes32 public constant ORDER_TYPEHASH =
     keccak256(

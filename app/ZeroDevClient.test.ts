@@ -102,13 +102,13 @@ describe("ZeroDevClient test", () => {
         expect(isValidOnUniversalSigValidator).toEqual(true)
     })
 
-    function createTypedData(owner: Address) {
+    function createTypedData(owner: Address, verifyingContract: Address) {
         return {
             domain: {
                 name: "OrderGatewayV2",
                 version: "1",
                 chainId: chain.id,
-                verifyingContract: MOCK_TYPED_REQUESTOR_ADDRESS,
+                verifyingContract: verifyingContract,
             },
             types: {
                 Order: [
@@ -140,7 +140,7 @@ describe("ZeroDevClient test", () => {
     }
 
     test<TestContext>("test cancelling order", { timeout }, async ctx => {
-        const typedData = createTypedData(ctx.kernelClient.account.address)
+        const typedData = createTypedData(ctx.kernelClient.account.address, ORDER_GATEWAY_V2_ADDRESS)
         console.log("typedData", safeJsonStringify(typedData))
 
         const signature = await ctx.zeroDevClient.signTypedData(ctx.kernelClient, typedData)
@@ -180,7 +180,7 @@ describe("ZeroDevClient test", () => {
     })
 
     test<TestContext>("test signing TypedData using singMessage", { timeout }, async ctx => {
-        const typedData = createTypedData(ctx.kernelClient.account.address)
+        const typedData = createTypedData(ctx.kernelClient.account.address, MOCK_TYPED_REQUESTOR_ADDRESS)
         console.log("typedData", safeJsonStringify(typedData))
 
         const signature = await ctx.zeroDevClient.signTypedData(ctx.kernelClient, typedData)
@@ -314,7 +314,7 @@ describe("ZeroDevClient test", () => {
         const sessionKeyAccount = privateKeyToAccount(sessionPrivateKey)
         console.log("sessionKeyAccount", sessionKeyAccount.address)
 
-        const typedData = createTypedData(sessionKeyAccount.address)
+        const typedData = createTypedData(sessionKeyAccount.address, ORDER_GATEWAY_V2_ADDRESS)
         console.log("typedData", safeJsonStringify(typedData))
 
         const sigBySessionKey = await sessionKeyAccount.signTypedData({
