@@ -390,25 +390,28 @@ export default function Home() {
 
     return (
         <Web3Provider>
-            <main className="flex flex-col items-center justify-between p-24 font-mono">
+            <main className="flex flex-col items-center p-24 font-mono">
                 <div className="z-10 w-full items-center justify-between text-lg lg:flex pt-3 pb-3">
                     <h1 className="underline">Clean example</h1>
                 </div>
-                <div className="z-10 w-full items-center justify-between text-sm lg:flex">
+                <div className="z-10 w-full items-center text-sm">
                     <p>wallet: {address}</p>
                     <p>userOpHash: {userOpHash}</p>
                     <p>signature: {signature}</p>
                     <p>isValidSig: {String(isValidSig)}</p>
                 </div>
-                <div className="z-10 w-full items-center justify-between text-sm lg:flex p-4 m-4">
-                    <input value={sessionPrivateKey} onChange={e => setSessionPrivateKey(e.target.value as Hex)}></input>
+                <div className="z-10 w-full items-center text-sm lg:flex m-2 p-2">
+                    <input className="text-gray-700 w-full p-2" value={sessionPrivateKey}
+                           onChange={e => setSessionPrivateKey(e.target.value as Hex)}></input>
                     <button
                         className="m-2 p-2 border-2 border-gray-300 rounded-sm"
                         onClick={() => setSessionPrivateKey(generatePrivateKey())}>
                         Regenerate Private Key
                     </button>
-                    <input value={passkeyName} onChange={e => setPasskeyName(e.target.value)}></input>
-                    <select value={webAuthnMode}
+                </div>
+                <div className="z-10 w-full items-center text-sm lg:flex m-2 p-2">
+                    <input className="text-gray-700 w-full p-2" value={passkeyName} onChange={e => setPasskeyName(e.target.value)}></input>
+                    <select className="text-gray-700 w-full p-2 m-4" value={webAuthnMode}
                             onChange={e => setWebAuthnMode(e.target.value === "login" ? WebAuthnMode.Login : WebAuthnMode.Register)}>
                         <option value="login">Login</option>
                         <option value="register">Register</option>

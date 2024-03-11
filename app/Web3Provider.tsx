@@ -1,16 +1,16 @@
 import { createConfig, WagmiProvider } from "wagmi"
 import { ReactNode } from "react"
-import { polygonMumbai } from "viem/chains"
+import { optimismSepolia } from "viem/chains"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { injected } from "@wagmi/connectors"
 import { fallback, http } from "viem"
 
 const wagmiConfig = createConfig({
-    chains: [polygonMumbai],
+    chains: [optimismSepolia],
     ssr: true,
     connectors: [injected()],
     transports: {
-        [polygonMumbai.id]: fallback([http()]),
+        [optimismSepolia.id]: fallback([http()]),
     },
 })
 
