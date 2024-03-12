@@ -379,7 +379,17 @@ export default function Home() {
             }),
         }
 
-        const userOperation = await zeroDevClient.prepareUserOperationRequest(kernelClient, [approveCallData])
+        const transferFundToMarginCallData = {
+            to: VAULT_ADDRESS,
+            value: 0n,
+            data: encodeFunctionData({
+                abi: vaultAbi,
+                functionName: "transferFund",
+                args: [kernelClient.account.address, kernelClient.account.address, big2Bigint(Big(10), 6)],
+            }),
+        }
+
+        const userOperation = await zeroDevClient.prepareUserOperationRequest(kernelClient, [transferFundToMarginCallData])
         const userOpHash = await zeroDevClient.sendSimulatedUserOperation(kernelClient, userOperation)
         console.log("userOpHash", userOpHash)
         setUserOpHash(userOpHash)
