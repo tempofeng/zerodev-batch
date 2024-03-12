@@ -54,66 +54,12 @@ export default function Home() {
                     },
                     {
                         target: VAULT_ADDRESS,
-                        valueLimit: BigInt(0),
-                        // @ts-ignore
-                        abi: vaultAbi,
-                        // @ts-ignore
-                        functionName: "deposit",
-                        args: [null, null],
-                    },
-                    {
-                        target: VAULT_ADDRESS,
-                        valueLimit: BigInt(0),
-                        // @ts-ignore
-                        abi: vaultAbi,
-                        // @ts-ignore
-                        functionName: "withdraw",
-                        args: [null],
-                    },
-                    {
-                        target: VAULT_ADDRESS,
-                        valueLimit: BigInt(0),
-                        // @ts-ignore
-                        abi: vaultAbi,
-                        // @ts-ignore
-                        functionName: "transferFundToMargin",
-                        args: [null, null],
-                    },
-                    {
-                        target: VAULT_ADDRESS,
-                        valueLimit: BigInt(0),
-                        // @ts-ignore
-                        abi: vaultAbi,
-                        // @ts-ignore
-                        functionName: "transferMarginToFund",
-                        args: [null, null],
-                    },
-                    {
-                        target: VAULT_ADDRESS,
-                        valueLimit: BigInt(0),
-                        // @ts-ignore
-                        abi: vaultAbi,
-                        // @ts-ignore
-                        functionName: "setAuthorization",
-                        args: [null, null],
                     },
                     {
                         target: CLEARING_HOUSE_ADDRESS,
-                        valueLimit: BigInt(0),
-                        // @ts-ignore
-                        abi: clearingHouseAbi,
-                        // @ts-ignore
-                        functionName: "setAuthorization",
-                        args: [null, null],
                     },
                     {
                         target: ORDER_GATEWAY_V2_ADDRESS,
-                        valueLimit: BigInt(0),
-                        // @ts-ignore
-                        abi: orderGatewayV2Abi,
-                        // @ts-ignore
-                        functionName: "cancelOrder",
-                        args: [null, null],
                     },
                 ],
             }),
@@ -379,6 +325,16 @@ export default function Home() {
             }),
         }
 
+        const depositCallData = {
+            to: VAULT_ADDRESS,
+            value: 0n,
+            data: encodeFunctionData({
+                abi: vaultAbi,
+                functionName: "deposit",
+                args: [kernelClient.account.address, big2Bigint(Big(10), 6)],
+            }),
+        }
+
         const transferFundToMarginCallData = {
             to: VAULT_ADDRESS,
             value: 0n,
@@ -389,7 +345,7 @@ export default function Home() {
             }),
         }
 
-        const userOperation = await zeroDevClient.prepareUserOperationRequest(kernelClient, [transferFundToMarginCallData])
+        const userOperation = await zeroDevClient.prepareUserOperationRequest(kernelClient, [depositCallData])
         const userOpHash = await zeroDevClient.sendSimulatedUserOperation(kernelClient, userOperation)
         console.log("userOpHash", userOpHash)
         setUserOpHash(userOpHash)
@@ -420,7 +376,8 @@ export default function Home() {
                     </button>
                 </div>
                 <div className="z-10 w-full items-center text-sm lg:flex m-2 p-2">
-                    <input className="text-gray-700 w-full p-2" value={passkeyName} onChange={e => setPasskeyName(e.target.value)}></input>
+                    <input className="text-gray-700 w-full p-2" value={passkeyName}
+                           onChange={e => setPasskeyName(e.target.value)}></input>
                     <select className="text-gray-700 w-full p-2 m-4" value={webAuthnMode}
                             onChange={e => setWebAuthnMode(e.target.value === "login" ? WebAuthnMode.Login : WebAuthnMode.Register)}>
                         <option value="login">Login</option>
