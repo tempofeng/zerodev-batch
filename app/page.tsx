@@ -1,7 +1,17 @@
 "use client"
 
 import { Web3Provider } from "./Web3Provider"
-import { Address, createPublicClient, encodeFunctionData, erc20Abi, hashMessage, Hex, http, PublicClient } from "viem"
+import {
+    Address,
+    createPublicClient,
+    encodeFunctionData,
+    erc20Abi,
+    hashMessage,
+    Hex,
+    http,
+    PublicClient,
+    toFunctionSelector,
+} from "viem"
 import { ZeroDevClient } from "@/app/ZeroDevClient"
 import { big2Bigint } from "@/app/bn"
 import Big from "big.js"
@@ -76,8 +86,9 @@ export default function Home() {
                         // @ts-ignore
                         abi: vaultAbi,
                         // @ts-ignore
-                        functionName: "transferFundToMargin",
-                        args: [null, null],
+                        // functionName: "transferFundToMargin",
+                        // args: [null, null],
+                        sig: toFunctionSelector("transferFundToMargin(uint256,uint256)"),
                     },
                     {
                         target: VAULT_ADDRESS,
@@ -125,9 +136,9 @@ export default function Home() {
 
     function createZeroDevClient() {
         return new ZeroDevClient(
-            `https://passkeys.zerodev.app/api/v2/${zeroDevProjectId}`,
-            `https://rpc.zerodev.app/api/v2/bundler/${zeroDevProjectId}`,
-            `https://rpc.zerodev.app/api/v2/paymaster/${zeroDevProjectId}`,
+            `https://passkeys.zerodev.app/api/v3/${zeroDevProjectId}`,
+            `https://rpc.zerodev.app/api/v2/bundler/${zeroDevProjectId}?bundlerProvider=ALCHEMY`,
+            `https://rpc.zerodev.app/api/v2/paymaster/${zeroDevProjectId}?paymasterProvider=ALCHEMY`,
         )
     }
 
@@ -379,6 +390,26 @@ export default function Home() {
             }),
         }
 
+        const depositCallData = {
+            to: VAULT_ADDRESS,
+            value: 0n,
+            data: encodeFunctionData({
+                abi: vaultAbi,
+                functionName: "deposit",
+                args: [kernelClient.account.address, big2Bigint(Big(10), 6)],
+            }),
+        }
+
+        const transferFundToMarginCallData = {
+            to: VAULT_ADDRESS,
+            value: 0n,
+            data: encodeFunctionData({
+                abi: vaultAbi,
+                functionName: "transferFundToMargin",
+                args: [0n, big2Bigint(Big(10), 6)],
+            }),
+        }
+
         const userOperation = await zeroDevClient.prepareUserOperationRequest(kernelClient, [approveCallData])
         const userOpHash = await zeroDevClient.sendSimulatedUserOperation(kernelClient, userOperation)
         console.log("userOpHash", userOpHash)
@@ -410,7 +441,8 @@ export default function Home() {
                     </button>
                 </div>
                 <div className="z-10 w-full items-center text-sm lg:flex m-2 p-2">
-                    <input className="text-gray-700 w-full p-2" value={passkeyName} onChange={e => setPasskeyName(e.target.value)}></input>
+                    <input className="text-gray-700 w-full p-2" value={passkeyName}
+                           onChange={e => setPasskeyName(e.target.value)}></input>
                     <select className="text-gray-700 w-full p-2 m-4" value={webAuthnMode}
                             onChange={e => setWebAuthnMode(e.target.value === "login" ? WebAuthnMode.Login : WebAuthnMode.Register)}>
                         <option value="login">Login</option>
