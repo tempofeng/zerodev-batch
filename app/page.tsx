@@ -1,7 +1,17 @@
 "use client"
 
 import { Web3Provider } from "./Web3Provider"
-import { Address, createPublicClient, encodeFunctionData, erc20Abi, hashMessage, Hex, http, PublicClient } from "viem"
+import {
+    Address,
+    createPublicClient,
+    encodeFunctionData,
+    erc20Abi,
+    hashMessage,
+    Hex,
+    http,
+    PublicClient,
+    toFunctionSelector,
+} from "viem"
 import { ZeroDevClient } from "@/app/ZeroDevClient"
 import { big2Bigint } from "@/app/bn"
 import Big from "big.js"
@@ -54,12 +64,67 @@ export default function Home() {
                     },
                     {
                         target: VAULT_ADDRESS,
+                        valueLimit: BigInt(0),
+                        // @ts-ignore
+                        abi: vaultAbi,
+                        // @ts-ignore
+                        functionName: "deposit",
+                        args: [null, null],
+                    },
+                    {
+                        target: VAULT_ADDRESS,
+                        valueLimit: BigInt(0),
+                        // @ts-ignore
+                        abi: vaultAbi,
+                        // @ts-ignore
+                        functionName: "withdraw",
+                        args: [null],
+                    },
+                    {
+                        target: VAULT_ADDRESS,
+                        valueLimit: BigInt(0),
+                        // @ts-ignore
+                        abi: vaultAbi,
+                        // @ts-ignore
+                        // functionName: "transferFundToMargin",
+                        // args: [null, null],
+                        sig: toFunctionSelector("transferFundToMargin(uint256,uint256)"),
+                    },
+                    {
+                        target: VAULT_ADDRESS,
+                        valueLimit: BigInt(0),
+                        // @ts-ignore
+                        abi: vaultAbi,
+                        // @ts-ignore
+                        functionName: "transferMarginToFund",
+                        args: [null, null],
+                    },
+                    {
+                        target: VAULT_ADDRESS,
+                        valueLimit: BigInt(0),
+                        // @ts-ignore
+                        abi: vaultAbi,
+                        // @ts-ignore
+                        functionName: "setAuthorization",
+                        args: [null, null],
                     },
                     {
                         target: CLEARING_HOUSE_ADDRESS,
+                        valueLimit: BigInt(0),
+                        // @ts-ignore
+                        abi: clearingHouseAbi,
+                        // @ts-ignore
+                        functionName: "setAuthorization",
+                        args: [null, null],
                     },
                     {
                         target: ORDER_GATEWAY_V2_ADDRESS,
+                        valueLimit: BigInt(0),
+                        // @ts-ignore
+                        abi: orderGatewayV2Abi,
+                        // @ts-ignore
+                        functionName: "cancelOrder",
+                        args: [null, null],
                     },
                 ],
             }),
@@ -71,9 +136,9 @@ export default function Home() {
 
     function createZeroDevClient() {
         return new ZeroDevClient(
-            `https://passkeys.zerodev.app/api/v2/${zeroDevProjectId}`,
-            `https://rpc.zerodev.app/api/v2/bundler/${zeroDevProjectId}`,
-            `https://rpc.zerodev.app/api/v2/paymaster/${zeroDevProjectId}`,
+            `https://passkeys.zerodev.app/api/v3/${zeroDevProjectId}`,
+            `https://rpc.zerodev.app/api/v2/bundler/${zeroDevProjectId}?bundlerProvider=ALCHEMY`,
+            `https://rpc.zerodev.app/api/v2/paymaster/${zeroDevProjectId}?paymasterProvider=ALCHEMY`,
         )
     }
 
@@ -340,12 +405,12 @@ export default function Home() {
             value: 0n,
             data: encodeFunctionData({
                 abi: vaultAbi,
-                functionName: "transferFund",
-                args: [kernelClient.account.address, kernelClient.account.address, big2Bigint(Big(10), 6)],
+                functionName: "transferFundToMargin",
+                args: [0n, big2Bigint(Big(10), 6)],
             }),
         }
 
-        const userOperation = await zeroDevClient.prepareUserOperationRequest(kernelClient, [depositCallData])
+        const userOperation = await zeroDevClient.prepareUserOperationRequest(kernelClient, [approveCallData])
         const userOpHash = await zeroDevClient.sendSimulatedUserOperation(kernelClient, userOperation)
         console.log("userOpHash", userOpHash)
         setUserOpHash(userOpHash)
